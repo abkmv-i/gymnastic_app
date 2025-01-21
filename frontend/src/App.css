@@ -1,0 +1,12 @@
+.tableAdd {
+  width: 100%;
+  align-items: center;
+  text-align: center;
+  border-collapse: collapse;
+  table-layout: fixed; 
+}
+table.tableAdd th,
+table.tableAdd td {
+  border: 0px solid;
+}
+
