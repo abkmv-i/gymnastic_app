@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "../App.css"
 
 interface Gymnast {
   id: number;
@@ -25,13 +26,12 @@ interface CompetitionData {
 }
 
 const CompetitionJudging: React.FC = () => {
-  const { id } = useParams(); // competition ID из URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   const [competition, setCompetition] = useState<CompetitionData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Состояние для формы
   const [selectedGymnast, setSelectedGymnast] = useState<string>("");
   const [apparatus, setApparatus] = useState<string>("");
   const [A_score, setScoreA] = useState<string>("");
@@ -57,7 +57,6 @@ const CompetitionJudging: React.FC = () => {
     }
   };
 
-  // Отправка результатов
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -69,7 +68,7 @@ const CompetitionJudging: React.FC = () => {
     try {
       await axios.post(`http://localhost:8080/scores/judge`, {
         gymnastId: selectedGymnast,
-        judge_id: "1", // Пример, в реальном проекте берется из контекста/логина
+        judge_id: "1",
         apparatus,
         A_score,
         E_score,
@@ -78,7 +77,6 @@ const CompetitionJudging: React.FC = () => {
 
       alert("Оценки успешно отправлены!");
 
-      // Очистка формы
       setSelectedGymnast("");
       setApparatus("");
       setScoreA("");
@@ -90,19 +88,23 @@ const CompetitionJudging: React.FC = () => {
     }
   };
 
+  const handleBackToCompetitions = () => {
+    navigate("/");
+  };
+
   const handleProtocolsClick = () => {
-    // Переход на страницу с результатами (протоколами)
     if (id) {
       navigate(`/competition/${id}/results`);
     }
   };
 
   const handleBackClick = () => {
-    // Возврат к странице соревнования
     if (id) {
       navigate(`/competition/${id}`);
     }
   };
+
+  
 
   if (loading) {
     return <p>Загрузка...</p>;
@@ -113,8 +115,8 @@ const CompetitionJudging: React.FC = () => {
   }
 
   return (
-    <div>
-      <h2>Судейство соревнования: {competition.name}</h2>
+    <div className="home-page">
+      <h1>Судейство соревнования: {competition.name}</h1>
 
       <form onSubmit={handleSubmit}>
         <div>
@@ -184,9 +186,12 @@ const CompetitionJudging: React.FC = () => {
         <button type="submit">Отправить результаты</button>
       </form>
 
-      <div style={{ marginTop: "20px" }}>
+      <div className="nav-buttons" style={{ marginTop: "20px" }}>
         <button onClick={handleProtocolsClick}>Протоколы</button>
-        <button onClick={handleBackClick}>Назад</button>
+        <button onClick={handleBackClick}>К соревнованию</button>
+        <button onClick={handleBackToCompetitions}>
+          К выбору соревнований
+        </button>
       </div>
     </div>
   );

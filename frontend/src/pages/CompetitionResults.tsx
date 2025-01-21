@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "../App.css"
 
-// Описываем тип данных, возвращаемых сервером из таблицы results
 interface ProtocolRow {
   id: number;
   gymnast_name: string;
   gymnast_id: number;
   competition_id: number;
-  total_score: string; // Или number, если вы приводите в число
+  total_score: string; 
   rank: number;
   a_score: string;
   e_score: string;
   da_score: string;
-  created_at: string; // Можно преобразовать в Date при желании
+  created_at: string; 
 }
 
 const CompetitionResults: React.FC = () => {
-  const { id } = useParams(); // competition ID из URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   const [results, setResults] = useState<ProtocolRow[]>([]);
@@ -30,7 +30,6 @@ const CompetitionResults: React.FC = () => {
     }
   }, [id]);
 
-  // Запрос на бэкенд для получения результатов (протоколов)
   const fetchProtocols = async (competitionId: string) => {
     try {
       const response = await axios.get<ProtocolRow[]>(
@@ -45,14 +44,15 @@ const CompetitionResults: React.FC = () => {
     }
   };
 
-  // Переход на страницу соревнования
   const handleGoToCompetition = () => {
     if (id) {
       navigate(`/competition/${id}`);
     }
   };
+  const handleBackToCompetitions = () => {
+    navigate("/");
+  };
 
-  // Переход на страницу судейства
   const handleGoToJudging = () => {
     if (id) {
       navigate(`/competition/${id}/judge`);
@@ -68,8 +68,8 @@ const CompetitionResults: React.FC = () => {
   }
 
   return (
-    <div>
-      <h2>Результаты соревнования</h2>
+    <div className="home-page">
+      <h1>Результаты соревнования</h1>
 
       {results.length === 0 ? (
         <p>Пока нет данных о результатах.</p>
@@ -102,7 +102,10 @@ const CompetitionResults: React.FC = () => {
         </table>
       )}
 
-      <div style={{ marginTop: "20px" }}>
+      <div className="nav-buttons" style={{ marginTop: "20px" }}>
+      <button onClick={handleBackToCompetitions}>
+          К выбору соревнований
+        </button>
         <button onClick={handleGoToCompetition}>К соревнованию</button>
         <button onClick={handleGoToJudging} style={{ marginLeft: "10px" }}>
           Судить

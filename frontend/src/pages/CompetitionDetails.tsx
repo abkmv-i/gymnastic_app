@@ -1,8 +1,7 @@
-// CompetitionDetails.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import "../App.css"
 interface Gymnast {
   id: number;
   name: string;
@@ -38,7 +37,6 @@ const CompetitionDetails: React.FC = () => {
     }
   }, [id]);
 
-  // Запрос деталей соревнования
   const fetchCompetitionDetails = async (competitionId: string) => {
     try {
       const response = await axios.get<CompetitionData>(
@@ -52,20 +50,17 @@ const CompetitionDetails: React.FC = () => {
     }
   };
 
-  // Переход на страницу судейства
   const handleJudgeClick = () => {
     if (!competition) return;
     navigate(`/competition/${competition.id}/judge`);
   };
 
-  // Переход на страницу результатов (протоколов)
   const handleProtocolsClick = () => {
     if (id) {
       navigate(`/competition/${id}/results`);
     }
   };
 
-  // Переход к выбору соревнований (обычно это главная страница "/")
   const handleBackToCompetitions = () => {
     navigate("/");
   };
@@ -79,8 +74,8 @@ const CompetitionDetails: React.FC = () => {
   }
 
   return (
-    <div>
-      <h2>Детальная информация о соревновании</h2>
+    <div className="home-page">
+      <h1>Детальная информация о соревновании</h1>
       
       <p>Название: {competition.name}</p>
       <p>Дата: {competition.date}</p>
@@ -114,7 +109,7 @@ const CompetitionDetails: React.FC = () => {
         <p>Гимнасток нет.</p>
       )}
 
-      <div style={{ marginTop: "20px" }}>
+      <div className="nav-buttons" style={{ marginTop: "20px" }}>
         <button onClick={handleJudgeClick} style={{ marginRight: "10px" }}>
           Судить
         </button>
