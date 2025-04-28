@@ -1,0 +1,116 @@
+/* CompetitionForm.css */
+.competition-form {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.competition-form h1 {
+    margin-bottom: 25px;
+    color: #333;
+    font-size: 24px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.competition-form .form-group {
+    margin-bottom: 20px;
+    padding: 0 15px;
+}
+
+.competition-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+    font-size: 15px;
+}
+
+.competition-form input,
+.competition-form select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+}
+
+.competition-form input:focus,
+.competition-form select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.competition-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.competition-form .btn-primary {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.competition-form .btn-primary:hover {
+    background-color: #3d8b40;
+}
+
+.competition-form .btn-secondary {
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.competition-form .btn-secondary:hover {
+    background-color: #e9ecef;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border-left: 4px solid #dc3545;
+}
+
+@media (max-width: 768px) {
+    .competition-form {
+        padding: 15px;
+    }
+    
+    .competition-form .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .competition-form .btn-primary,
+    .competition-form .btn-secondary {
+        width: 100%;
+    }
+}

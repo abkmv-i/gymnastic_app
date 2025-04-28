@@ -1,0 +1,226 @@
+/* AgeCategoriesManager.css */
+
+select {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+  }
+  
+  select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  
+  select:hover {
+    border-color: #bbb;
+  }
+  
+  /* Стили для опций */
+  select option {
+    padding: 8px 12px;
+    background: white;
+    color: #333;
+  }
+  
+  select option:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* Адаптивные стили для формы */
+  .add-category-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+    margin-top: 20px;
+  }
+  
+  .add-category-form h4 {
+    grid-column: 1 / -1;
+    margin: 0 0 10px 0;
+    color: #444;
+    font-size: 16px;
+  }
+  
+  .add-category-form input {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  .add-category-form input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  
+  .add-category-form button {
+    padding: 10px 16px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+  }
+  
+  .add-category-form button:hover {
+    background: #45a049;
+  }
+  
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .add-category-form {
+      grid-template-columns: 1fr;
+    }
+    
+    select, input, button {
+      width: 100%;
+    }
+  }
+  
+  /* Дополнительные стили для визуального разделения */
+  .categories-section {
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .category-list {
+    margin: 24px 0;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: white;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .category-item:last-child {
+    border-bottom: none;
+  }
+
+  .category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 5px 0;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.category-item > div {
+  display: flex;
+  gap: 8px;
+}
+
+
+
+/* Кнопки */
+.btn {
+    width: 30px;
+    height: 40px;
+    padding: 0;
+    margin: 2px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border 0.2s ease;
+    background: transparent;
+  }
+  
+  /* Редактировать */
+.btn.edit {
+    border: 1px solid #ffc107;
+    color: #ffc107;
+  }
+  
+  .btn.edit:hover {
+    background: rgba(255, 193, 7, 0.1);
+  }
+  
+  /* Удалить */
+  .btn.delete {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+  }
+  
+  .btn.delete:hover {
+    background: rgba(220, 53, 69, 0.1);
+  }
+  
+  /* Добавить */
+  .btn.add {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+  }
+  
+  .btn.add:hover {
+    background: #45a049;
+  }
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
+.add-category-form {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.add-category-form h4 {
+  margin-top: 0;
+}
+
+.add-category-form input,
+.add-category-form select {
+  margin-right: 10px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.add-category-form button {
+  margin-right: 10px;
+}

@@ -1,197 +1,89 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import "../App.css"
-
-interface Gymnast {
-  id: number;
-  name: string;
-  birth_year: number;
-  club: string;
-}
-
-interface Judge {
-  id: number;
-  name: string;
-  category: string;
-}
-
-interface CompetitionData {
-  id: number;
-  name: string;
-  date: string;
-  location: string;
-  gymnasts: Gymnast[];
-  judges: Judge[];
-}
+// CompetitionJudging.tsx (страница судейства)
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Gymnast, Performance, Score } from '../models/types';
+import LoadingSpinner from '../components/LoadingSpinner';
+import JudgingForm from '../components/JudgingForm';
+import { useAuth } from '../context/AuthContext';
 
 const CompetitionJudging: React.FC = () => {
-  const { id } = useParams(); 
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [competition, setCompetition] = useState<CompetitionData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  const [selectedGymnast, setSelectedGymnast] = useState<string>("");
-  const [apparatus, setApparatus] = useState<string>("");
-  const [A_score, setScoreA] = useState<string>("");
-  const [E_score, setScoreE] = useState<string>("");
-  const [DA_score, setScoreDA] = useState<string>("");
+  const [gymnasts, setGymnasts] = useState<Gymnast[]>([]);
+  const [performances, setPerformances] = useState<Performance[]>([]);
+  const [selectedGymnast, setSelectedGymnast] = useState<string>('');
+  const [selectedPerformance, setSelectedPerformance] = useState<Performance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (id) {
-      fetchCompetitionDetails(id);
-    }
+    const fetchData = async () => {
+      try {
+        const [gymnastsRes, performancesRes] = await Promise.all([
+          axios.get<Gymnast[]>(`/competitions/${id}/gymnasts`),
+          axios.get<Performance[]>(`/competitions/${id}/performances`),
+        ]);
+
+        setGymnasts(gymnastsRes.data);
+        setPerformances(performancesRes.data);
+      } catch (err) {
+        setError('Failed to fetch data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
-  const fetchCompetitionDetails = async (competitionId: string) => {
+  const handleGymnastChange = (gymnastId: string) => {
+    setSelectedGymnast(gymnastId);
+    const performance = performances.find(p => p.gymnast_id === parseInt(gymnastId));
+    setSelectedPerformance(performance || null);
+  };
+
+  const handleSubmitScore = async (scoreData: Omit<Score, 'id' | 'created_at'>) => {
     try {
-      const response = await axios.get<CompetitionData>(
-        `http://localhost:8080/competitions/${competitionId}`
-      );
-      setCompetition(response.data);
-    } catch (error) {
-      console.error("Ошибка при получении информации о соревновании:", error);
-    } finally {
-      setLoading(false);
+      await axios.post('/scores', scoreData);
+      navigate(`/competitions/${id}/results`);
+    } catch (err) {
+      setError('Failed to submit score');
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedGymnast || !A_score || !E_score || !DA_score) {
-      alert("Пожалуйста, заполните все поля и выберите гимнастку.");
-      return;
-    }
-
-    try {
-      await axios.post(`http://localhost:8080/scores/judge`, {
-        gymnastId: selectedGymnast,
-        judge_id: "1",
-        apparatus,
-        A_score,
-        E_score,
-        DA_score,
-      });
-
-      alert("Оценки успешно отправлены!");
-
-      setSelectedGymnast("");
-      setApparatus("");
-      setScoreA("");
-      setScoreE("");
-      setScoreDA("");
-    } catch (error) {
-      console.error("Ошибка при отправке результатов судейства:", error);
-      alert("Ошибка при отправке результатов судейства.");
-    }
-  };
-
-  const handleBackToCompetitions = () => {
-    navigate("/");
-  };
-
-  const handleProtocolsClick = () => {
-    if (id) {
-      navigate(`/competition/${id}/results`);
-    }
-  };
-
-  const handleBackClick = () => {
-    if (id) {
-      navigate(`/competition/${id}`);
-    }
-  };
-
-  
-
-  if (loading) {
-    return <p>Загрузка...</p>;
-  }
-
-  if (!competition) {
-    return <p>Соревнование не найдено.</p>;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
-    <div className="home-page">
-      <h1>Судейство соревнования: {competition.name}</h1>
-
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="gymnastSelect">Выберите гимнастку:</label>
+    <div className="container">
+      <h1>Judging Panel</h1>
+      
+      <div className="judging-container">
+        <div className="gymnast-selector">
+          <label htmlFor="gymnast">Select Gymnast:</label>
           <select
-            id="gymnastSelect"
+            id="gymnast"
             value={selectedGymnast}
-            onChange={(e) => setSelectedGymnast(e.target.value)}
+            onChange={(e) => handleGymnastChange(e.target.value)}
           >
-            <option value="">-- Выберите --</option>
-            {competition.gymnasts.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name} (Клуб: {g.club})
+            <option value="">-- Select Gymnast --</option>
+            {gymnasts.map(gymnast => (
+              <option key={gymnast.id} value={gymnast.id}>
+                {gymnast.name} ({gymnast.birth_year})
               </option>
             ))}
           </select>
         </div>
 
-        <div>
-          <label htmlFor="apparatusSelect">Выберите предмет:</label>
-          <select
-            id="apparatusSelect"
-            value={apparatus}
-            onChange={(e) => setApparatus(e.target.value)}
-          >
-            <option value="">-- Выберите --</option>
-            <option value="hoop">Обруч</option>
-            <option value="ball">Мяч</option>
-            <option value="clubs">Булавы</option>
-            <option value="ribbon">Лента</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="scoreA">Оценка бригады A:</label>
-          <input
-            id="scoreA"
-            type="number"
-            step="0.1"
-            value={A_score}
-            onChange={(e) => setScoreA(e.target.value)}
+        {selectedPerformance && (
+          <JudgingForm 
+            performance={selectedPerformance} 
+            judgeId={user?.id || 0}
+            onSubmit={handleSubmitScore}
           />
-        </div>
-
-        <div>
-          <label htmlFor="scoreE">Оценка бригады E:</label>
-          <input
-            id="scoreE"
-            type="number"
-            step="0.1"
-            value={E_score}
-            onChange={(e) => setScoreE(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="scoreDA">Оценка бригады DA:</label>
-          <input
-            id="scoreDA"
-            type="number"
-            step="0.1"
-            value={DA_score}
-            onChange={(e) => setScoreDA(e.target.value)}
-          />
-        </div>
-
-        <button type="submit">Отправить результаты</button>
-      </form>
-
-      <div className="nav-buttons" style={{ marginTop: "20px" }}>
-        <button onClick={handleProtocolsClick}>Протоколы</button>
-        <button onClick={handleBackClick}>К соревнованию</button>
-        <button onClick={handleBackToCompetitions}>
-          К выбору соревнований
-        </button>
+        )}
       </div>
     </div>
   );

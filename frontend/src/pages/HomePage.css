@@ -1,0 +1,97 @@
+/* HomePage.css */
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .home-title {
+    font-size: 2rem;
+    color: #333;
+    margin: 0;
+  }
+  
+  .create-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .create-button:hover {
+    background-color: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .button-icon {
+    font-size: 1.25rem;
+  }
+  
+  .competitions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    color: #64748b;
+  }
+  
+  .empty-button {
+    margin-top: 1rem;
+  }
+  
+  .error-message {
+    color: #dc2626;
+    background-color: #fee2e2;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  .button-icon {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+  @media (max-width: 768px) {
+    .home-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .create-button {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .competitions-grid {
+      grid-template-columns: 1fr;
+    }
+    .button-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+  }

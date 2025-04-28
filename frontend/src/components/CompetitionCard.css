@@ -1,0 +1,25 @@
+.competition-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  
+  .competition-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .competition-card h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .competition-card p {
+    margin: 5px 0;
+    color: #666;
+  }

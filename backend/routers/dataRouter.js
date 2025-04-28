@@ -22,4 +22,10 @@ router.get("/competitions/:id", dataController.getCompetitionByID);
 
 router.get("/competitions/:id/list", dataController.getListGymnastics);
 
+router.get('/competitions/:competitionId/age-categories', dataController.getAgeCategories);
+router.post('/competitions/:competitionId/age-categories', dataController.addAgeCategory);
+router.put('/age-categories/:id', dataController.updateAgeCategory);
+router.delete('/age-categories/:id', dataController.deleteAgeCategory);
+
+//router.put("/competitions/:id", authMiddleware, dataController.updateCompetition);
 module.exports = router;

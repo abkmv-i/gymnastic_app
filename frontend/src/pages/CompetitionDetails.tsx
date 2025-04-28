@@ -1,124 +1,117 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import "../App.css"
-interface Gymnast {
-  id: number;
-  name: string;
-  birth_year: number;
-  club: string;
-}
 
-interface Judge {
-  id: number;
-  name: string;
-  category: string;
-}
-
-interface CompetitionData {
-  id: number;
-  name: string;
-  date: string;
-  location: string;
-  gymnasts: Gymnast[];
-  judges: Judge[];
-}
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Competition, Gymnast, Judge, Stream, Result, AgeCategory } from '../models/types';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Tabs from '../components/Tabs';
+import StreamsTable from '../components/StreamsTable';
+import ResultsTable from '../components/ResultsTable';
+import { useAuth } from '../context/AuthContext';
+import '../components/common.css';  // Подключаем твои стили
 
 const CompetitionDetails: React.FC = () => {
-  const { id } = useParams(); // competition ID из URL
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [competition, setCompetition] = useState<CompetitionData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [competition, setCompetition] = useState<Competition | null>(null);
+  const [gymnasts, setGymnasts] = useState<Gymnast[]>([]);
+  const [judges, setJudges] = useState<Judge[]>([]);
+  const [streams, setStreams] = useState<Stream[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
+  const [ageCategories, setAgeCategories] = useState<AgeCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('streams');
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (id) {
-      fetchCompetitionDetails(id);
-    }
+    const fetchData = async () => {
+      try {
+        const [
+          compRes, 
+          gymnastsRes, 
+          judgesRes, 
+          streamsRes, 
+          resultsRes,
+          ageCategoriesRes
+        ] = await Promise.all([
+          axios.get<Competition>(`http://localhost:8080/competitions/${id}`),
+          axios.get<Gymnast[]>(`http://localhost:8080/competitions/${id}/gymnasts`),
+          axios.get<Judge[]>(`http://localhost:8080/competitions/${id}/judges`),
+          axios.get<Stream[]>(`http://localhost:8080/competitions/${id}/streams-with-gymnasts`),
+          axios.get<Result[]>(`http://localhost:8080/competitions/${id}/results-with-details`),
+          axios.get<AgeCategory[]>(`http://localhost:8080/competitions/${id}/age-categories`)
+        ]);
+
+        setCompetition(compRes.data);
+        setGymnasts(gymnastsRes.data);
+        setJudges(judgesRes.data);
+        setStreams(streamsRes.data);
+        setResults(resultsRes.data);
+        setAgeCategories(ageCategoriesRes.data);
+      } catch (err) {
+        console.error('Ошибка при загрузке данных соревнования:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
-  const fetchCompetitionDetails = async (competitionId: string) => {
-    try {
-      const response = await axios.get<CompetitionData>(
-        `http://localhost:8080/competitions/${competitionId}`
-      );
-      setCompetition(response.data);
-    } catch (error) {
-      console.error("Ошибка при получении информации о соревновании:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleEdit = () => {
+    navigate(`/competitions/${id}/edit`);
   };
 
-  const handleJudgeClick = () => {
-    if (!competition) return;
-    navigate(`/competition/${competition.id}/judge`);
+  const handleJudge = () => {
+    navigate(`/competitions/${id}/judge`);
   };
 
-  const handleProtocolsClick = () => {
-    if (id) {
-      navigate(`/competition/${id}/results`);
-    }
-  };
-
-  const handleBackToCompetitions = () => {
-    navigate("/");
-  };
-
-  if (loading) {
-    return <p>Загрузка...</p>;
-  }
-
-  if (!competition) {
-    return <p>Соревнование не найдено.</p>;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (!competition) return <div>Соревнование не найдено</div>;
 
   return (
-    <div className="home-page">
-      <h1>Детальная информация о соревновании</h1>
-      
-      <p>Название: {competition.name}</p>
-      <p>Дата: {competition.date}</p>
-      <p>Место: {competition.location}</p>
+    <div className="section-container">
+      <div className="competition-header">
+        <h1>{competition.name}</h1>
+        <div className="competition-meta">
+          <span>Дата: {new Date(competition.date).toLocaleDateString()}</span>
+          <span>Место проведения: {competition.location}</span>
+          <span>Статус: {competition.status === 'planned' ? 'Запланировано' : competition.status === 'in_progress' ? 'В процессе' : 'Завершено'}</span>
+        </div>
 
-      <h3>Список гимнасток</h3>
-      {competition.gymnasts.length > 0 ? (
-        <table
-          border={1}
-          cellPadding={5}
-          style={{ borderCollapse: "collapse", marginBottom: "16px" }}
-        >
-          <thead>
-            <tr>
-              <th>Имя</th>
-              <th>Год рождения</th>
-              <th>Клуб</th>
-            </tr>
-          </thead>
-          <tbody>
-            {competition.gymnasts.map((gymnast) => (
-              <tr key={gymnast.id}>
-                <td>{gymnast.name}</td>
-                <td>{gymnast.birth_year}</td>
-                <td>{gymnast.club}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>Гимнасток нет.</p>
-      )}
+        <div className="action-buttons">
+          <button onClick={handleEdit} className="btn edit">
+            Редактировать
+          </button>
+          <button onClick={handleJudge} className="btn add">
+            Судить
+          </button>
+        </div>
+      </div>
 
-      <div className="nav-buttons" style={{ marginTop: "20px" }}>
-        <button onClick={handleJudgeClick} style={{ marginRight: "10px" }}>
-          Судить
-        </button>
-        <button onClick={handleProtocolsClick} style={{ marginRight: "10px" }}>
-          Протоколы
-        </button>
-        <button onClick={handleBackToCompetitions}>
-          К выбору соревнований
-        </button>
+      <Tabs
+        tabs={[
+          { id: 'streams', label: 'Расписание' },
+          { id: 'results', label: 'Результаты' },
+        ]}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      <div className="table-container">
+        {activeTab === 'streams' && (
+          <StreamsTable 
+            streams={streams} 
+            ageCategories={ageCategories} 
+          />
+        )}
+        {activeTab === 'results' && (
+          <ResultsTable 
+            results={results} 
+            gymnasts={gymnasts} 
+            ageCategories={ageCategories}
+          />
+        )}
       </div>
     </div>
   );

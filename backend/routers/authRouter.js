@@ -9,4 +9,6 @@ router.post("/login", authController.login);
 // Регистрация
 router.post("/register", authController.register);
 
+router.post("/me", authController.getCurrentUser);
+
 module.exports = router;

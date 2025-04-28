@@ -1,116 +1,98 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import "../App.css"
-
-interface ProtocolRow {
-  id: number;
-  gymnast_name: string;
-  gymnast_id: number;
-  competition_id: number;
-  total_score: string; 
-  rank: number;
-  a_score: string;
-  e_score: string;
-  da_score: string;
-  created_at: string; 
-}
+// CompetitionResults.tsx (страница результатов)
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Result, Gymnast, AgeCategory} from '../models/types';
+import ResultsTable from '../components/ResultsTable';
+import LoadingSpinner from '../components/LoadingSpinner';
+import * as XLSX from 'xlsx';
+import { useAuth } from '../context/AuthContext';
 
 const CompetitionResults: React.FC = () => {
-  const { id } = useParams(); 
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  const [results, setResults] = useState<ProtocolRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+  const [results, setResults] = useState<Result[]>([]);
+  const [gymnasts, setGymnasts] = useState<Gymnast[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [competitionName, setCompetitionName] = useState('');
+  const [ageCategories, setAgeCategories] = useState<AgeCategory[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (id) {
-      fetchProtocols(id);
-    }
+    const fetchData = async () => {
+      try {
+        const [resultsRes, gymnastsRes, competitionRes, ageCategoriesRes] = await Promise.all([
+          axios.get<Result[]>(`/competitions/${id}/results`),
+          axios.get<Gymnast[]>(`/competitions/${id}/gymnasts`),
+          axios.get<{ name: string }>(`/competitions/${id}`),
+          axios.get<AgeCategory[]>('http://localhost:8080/age-categories')
+        ]);
+
+        setResults(resultsRes.data);
+        setGymnasts(gymnastsRes.data);
+        setCompetitionName(competitionRes.data.name);
+        setAgeCategories(ageCategoriesRes.data);
+      } catch (err) {
+        setError('Failed to fetch results');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
-  const fetchProtocols = async (competitionId: string) => {
+  const handleExport = () => {
+    const data = results.map(result => {
+      const gymnast = gymnasts.find(g => g.id === result.gymnast_id);
+      return {
+        'Rank': result.rank,
+        'Gymnast': gymnast?.name || 'Unknown',
+        'Total Score': result.total_score,
+        'A Score': result.a_score,
+        'E Score': result.e_score,
+        'DA Score': result.da_score,
+        'DB Score': result.db_score || '-',
+        'Penalties': result.penalties || 0,
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    XLSX.writeFile(wb, `${competitionName}_Results.xlsx`);
+  };
+
+  const handleCalculateResults = async () => {
     try {
-      const response = await axios.get<ProtocolRow[]>(
-        `http://localhost:8080/results/protocols?competition_id=${competitionId}`
-      );
-      setResults(response.data);
+      await axios.post(`/competitions/${id}/calculate-results`);
+      navigate(0); // Refresh the page
     } catch (err) {
-      console.error("Ошибка при получении протоколов:", err);
-      setError("Не удалось загрузить протоколы.");
-    } finally {
-      setLoading(false);
+      setError('Failed to calculate results');
     }
   };
 
-  const handleGoToCompetition = () => {
-    if (id) {
-      navigate(`/competition/${id}`);
-    }
-  };
-  const handleBackToCompetitions = () => {
-    navigate("/");
-  };
-
-  const handleGoToJudging = () => {
-    if (id) {
-      navigate(`/competition/${id}/judge`);
-    }
-  };
-
-  if (loading) {
-    return <p>Загрузка результатов...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
-    <div className="home-page">
-      <h1>Результаты соревнования</h1>
-
-      {results.length === 0 ? (
-        <p>Пока нет данных о результатах.</p>
-      ) : (
-        <table border={1} cellPadding={5} style={{ borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>Место</th>
-              <th>Гимнастка</th>
-              <th>Общая оценка</th>
-              <th>A_score</th>
-              <th>E_score</th>
-              <th>DA_score</th>
-
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((row) => (
-              <tr key={row.id}>
-                <td>{row.rank}</td>
-                <td>{row.gymnast_name}</td>
-                <td>{row.total_score}</td>
-                <td>{row.a_score}</td>
-                <td>{row.e_score}</td>
-                <td>{row.da_score}</td>
-
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <div className="nav-buttons" style={{ marginTop: "20px" }}>
-      <button onClick={handleBackToCompetitions}>
-          К выбору соревнований
-        </button>
-        <button onClick={handleGoToCompetition}>К соревнованию</button>
-        <button onClick={handleGoToJudging} style={{ marginLeft: "10px" }}>
-          Судить
-        </button>
+    <div className="container">
+      <div className="header">
+        <h1>Results: {competitionName}</h1>
+        <div className="action-buttons">
+          <button onClick={handleExport} className="btn-secondary">
+            Export to Excel
+          </button>
+          {user?.role === 'admin' && (
+            <button onClick={handleCalculateResults} className="btn-primary">
+              Calculate Results
+            </button>
+          )}
+        </div>
       </div>
+
+      <ResultsTable results={results} gymnasts={gymnasts} ageCategories={ageCategories}/>
     </div>
   );
 };

@@ -145,48 +145,158 @@ class DataController {
       async getCompetitionByID(req, res) {
         try {
           const { id } = req.params;
-
+      
+          // Получаем основную информацию о соревновании
           const competition = await db.query(
-            "SELECT id, name, date, location FROM competitions WHERE id = $1",
+            "SELECT id, name, date, location, status FROM competitions WHERE id = $1",
             [id]
           );
-
+      
           if (competition.rows.length === 0) {
             return res.status(404).json({ error: "Competition not found" });
           }
-
-          const competitionId = competition.rows[0].id;
-
-          // Получить список гимнасток для соревнования
+      
+          // Получаем гимнасток (используем LEFT JOIN на случай отсутствия связей)
           const gymnasts = await db.query(
-            `SELECT g.id, g.name, g.birth_year, g.club
+            `SELECT DISTINCT g.id, g.name, g.birth_year, g.city
              FROM gymnasts g
-             JOIN performances p ON g.id = p.gymnast_id
-             WHERE p.competition_id = $1`,
-            [competitionId]
+             LEFT JOIN gymnast_streams gs ON g.id = gs.gymnast_id
+             LEFT JOIN streams s ON gs.stream_id = s.id
+             WHERE s.competition_id = $1 OR g.id IN (
+               SELECT gymnast_id FROM results WHERE competition_id = $1
+             )`,
+            [id]
           );
-
-          // Получить список судей для соревнования
+      
+          // Получаем судей (используем альтернативный подход)
           const judges = await db.query(
-            `SELECT j.id, j.name, j.category
+            `SELECT DISTINCT j.id, j.name, pj.position AS category
              FROM judges j
-             JOIN scores s ON j.id = s.judge_id
-             JOIN performances p ON s.performance_id = p.id
-             WHERE p.competition_id = $1
-             GROUP BY j.id`,
-            [competitionId]
+             JOIN panel_judges pj ON j.id = pj.judge_id
+             JOIN judging_panels jp ON pj.panel_id = jp.id
+             WHERE jp.competition_id = $1`,
+            [id]
           );
-
+      
           res.json({
             ...competition.rows[0],
             gymnasts: gymnasts.rows,
             judges: judges.rows
           });
         } catch (err) {
-          console.error(err);
-          res.status(500).json({ error: "Failed to fetch competition details" });
+          console.error("Detailed error:", err);
+          res.status(500).json({ 
+            error: "Failed to fetch competition details",
+            details: err.message 
+          });
         }
       }
+
+      async getAgeCategories(req, res) {
+        try {
+            const { competitionId } = req.params;
+    
+            const categories = await db.query(
+                `SELECT id, name, min_birth_year, max_birth_year, description
+                 FROM age_categories
+                 WHERE competition_id = $1
+                 ORDER BY min_birth_year`,
+                [competitionId]
+            );
+    
+            res.json(categories.rows);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: "Не удалось получить категории для соревнования" });
+        }
+    }
+    
+
+    async addAgeCategory(req, res) {
+      try {
+          const { competitionId } = req.params;
+          const { name, minBirthYear, maxBirthYear, description } = req.body;
+  
+          // Проверка уникальности названия в рамках соревнования
+          const existing = await db.query(
+              'SELECT 1 FROM age_categories WHERE name = $1 AND competition_id = $2',
+              [name, competitionId]
+          );
+  
+          if (existing.rows.length > 0) {
+              return res.status(400).json({ 
+                  error: "Категория с таким названием уже существует для этого соревнования" 
+              });
+          }
+  
+          const newCategory = await db.query(
+              `INSERT INTO age_categories (name, min_birth_year, max_birth_year, description, competition_id) 
+               VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+              [name, minBirthYear, maxBirthYear, description || null, competitionId]
+          );
+  
+          res.status(201).json(newCategory.rows[0]);
+      } catch (err) {
+          console.error(err);
+          res.status(500).json({ error: "Не удалось добавить возрастную категорию" });
+      }
+  }
+  
+    
+
+  async deleteAgeCategory(req, res) {
+    try {
+        const { id } = req.params;
+
+        // Проверяем, используется ли категория в streams или у гимнастов
+        const inUse = await db.query(
+            `SELECT 1 FROM streams WHERE age_category_id = $1 LIMIT 1`,
+            [id]
+        );
+
+        if (inUse.rows.length > 0) {
+            return res.status(400).json({ 
+                error: "Нельзя удалить категорию, она используется в потоках соревнования"
+            });
+        }
+
+        await db.query(
+            'DELETE FROM age_categories WHERE id = $1',
+            [id]
+        );
+
+        res.json({ message: "Категория успешно удалена" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Не удалось удалить категорию" });
+    }
+}
+
+
+  async updateAgeCategory(req, res) {
+    try {
+        const { id } = req.params;
+        const { name, minBirthYear, maxBirthYear, description } = req.body;
+
+        const updated = await db.query(
+            `UPDATE age_categories 
+             SET name = $1, min_birth_year = $2, max_birth_year = $3, description = $4
+             WHERE id = $5
+             RETURNING *`,
+            [name, minBirthYear, maxBirthYear, description || null, id]
+        );
+
+        if (updated.rows.length === 0) {
+            return res.status(404).json({ error: "Категория не найдена" });
+        }
+
+        res.json(updated.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Не удалось обновить категорию" });
+    }
+}
+
 
 }
 
