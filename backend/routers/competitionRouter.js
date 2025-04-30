@@ -7,7 +7,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.post("/", authMiddleware, competitionController.createCompetition);
 router.post("/:competition_id/days", authMiddleware, competitionController.addCompetitionDay);
 router.post("/:competition_id/streams", authMiddleware, competitionController.createStream);
-router.post("/streams/assign-gymnast", authMiddleware, competitionController.assignGymnastToStream);
+// router.post("/streams/assign-gymnast", authMiddleware, competitionController.assignGymnastToStream);
 
 // Судейские бригады
 router.post("/:competition_id/panels", authMiddleware, competitionController.createJudgingPanel);
@@ -26,5 +26,11 @@ router.get("/:competition_id/results", competitionController.getCompetitionResul
 router.get("/:competition_id/streams-with-gymnasts", competitionController.getStreamsWithGymnastsAndApparatuses);
 router.get("/:competition_id/results-with-details", competitionController.getCompetitionResultsWithDetails);
 router.put("/:id", authMiddleware, competitionController.updateCompetition);
+// Авто-распределение
+router.post('/:competition_id/auto-assign', competitionController.autoAssignGymnastsToStreams);
+
+// Ручное распределение
+router.post('/streams/assign-gymnast', competitionController.manualAssignGymnast);
+router.delete('/:competition_id', competitionController.deleteCompetition);
 
 module.exports = router;

@@ -77,31 +77,31 @@ class CompetitionController {
     }
 
     // Назначение гимнасток в потоки
-    async assignGymnastToStream(req, res) {
-        try {
-            const { gymnast_id, stream_id } = req.body;
+    // async assignGymnastToStream(req, res) {
+    //     try {
+    //         const { gymnast_id, stream_id } = req.body;
             
-            // Проверяем, не назначена ли уже гимнастка в этот поток
-            const existingAssignment = await db.query(
-                "SELECT * FROM gymnast_streams WHERE gymnast_id = $1 AND stream_id = $2",
-                [gymnast_id, stream_id]
-            );
+    //         // Проверяем, не назначена ли уже гимнастка в этот поток
+    //         const existingAssignment = await db.query(
+    //             "SELECT * FROM gymnast_streams WHERE gymnast_id = $1 AND stream_id = $2",
+    //             [gymnast_id, stream_id]
+    //         );
             
-            if (existingAssignment.rows.length > 0) {
-                return res.status(400).json({ error: "Gymnast already assigned to this stream" });
-            }
+    //         if (existingAssignment.rows.length > 0) {
+    //             return res.status(400).json({ error: "Gymnast already assigned to this stream" });
+    //         }
             
-            const assignment = await db.query(
-                "INSERT INTO gymnast_streams (gymnast_id, stream_id) VALUES ($1, $2) RETURNING *",
-                [gymnast_id, stream_id]
-            );
+    //         const assignment = await db.query(
+    //             "INSERT INTO gymnast_streams (gymnast_id, stream_id) VALUES ($1, $2) RETURNING *",
+    //             [gymnast_id, stream_id]
+    //         );
             
-            res.status(201).json(assignment.rows[0]);
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({ error: "Failed to assign gymnast to stream" });
-        }
-    }
+    //         res.status(201).json(assignment.rows[0]);
+    //     } catch (err) {
+    //         console.error(err);
+    //         res.status(500).json({ error: "Failed to assign gymnast to stream" });
+    //     }
+    // }
 
     // Создание судейских бригад
     async createJudgingPanel(req, res) {
@@ -353,8 +353,7 @@ async getStreamsWithGymnasts(req, res) {
   async getStreamsWithGymnastsAndApparatuses(req, res) {
     try {
       const { competition_id } = req.params;
-      
-      // Получаем потоки
+  
       const streams = await db.query(`
         SELECT s.*, ac.name as age_category_name 
         FROM streams s
@@ -363,7 +362,6 @@ async getStreamsWithGymnasts(req, res) {
         ORDER BY s.stream_number
       `, [competition_id]);
   
-      // Для каждого потока получаем гимнасток с их предметами
       for (let stream of streams.rows) {
         const gymnastsWithApparatuses = await db.query(`
           SELECT 
@@ -372,21 +370,18 @@ async getStreamsWithGymnasts(req, res) {
             g.birth_year,
             g.city,
             g.coach,
-            (
-              SELECT array_agg(p.apparatus::text ORDER BY p.id)
-              FROM performances p
-              WHERE p.gymnast_id = g.id AND p.stream_id = $1
-            ) as apparatuses
+            COALESCE(array_agg(DISTINCT p.apparatus::text), ARRAY[]::text[]) as apparatuses
           FROM gymnasts g
           JOIN gymnast_streams gs ON g.id = gs.gymnast_id
+          LEFT JOIN performances p ON p.gymnast_id = g.id AND p.stream_id = $1
           WHERE gs.stream_id = $1
           GROUP BY g.id, g.name, g.birth_year, g.city, g.coach
           ORDER BY g.name
         `, [stream.id]);
-        
+  
         stream.gymnasts = gymnastsWithApparatuses.rows.map(g => ({
           ...g,
-          apparatuses: g.apparatuses || [] // Гарантируем, что apparatuses будет массивом
+          apparatuses: g.apparatuses || []
         }));
       }
   
@@ -396,6 +391,8 @@ async getStreamsWithGymnasts(req, res) {
       res.status(500).json({ message: 'Server error' });
     }
   };
+  
+  
 
   async getCompetitionResultsWithDetails(req, res) {
     try {
@@ -499,6 +496,241 @@ async getStreamsWithGymnasts(req, res) {
     }
   };
   
+
+  async autoAssignGymnastsToStreams(req, res) {
+    try {
+      const { competition_id } = req.params;
+      const { day_start_time, day_end_time } = req.body;
+  
+      if (!day_start_time || !day_end_time) {
+        return res.status(400).json({ error: "Нужно передать время начала и окончания дня соревнований" });
+      }
+  
+      const apparatusMap = {
+        'б/п': 'no_apparatus',
+        'скакалка': 'rope',
+        'обруч': 'hoop',
+        'мяч': 'ball',
+        'булавы': 'clubs',
+        'лента': 'ribbon'
+      };
+  
+      const gymnastsResult = await db.query(`
+        SELECT g.id, g.name, g.age_category_id
+        FROM gymnasts g
+        JOIN competition_gymnasts cg ON g.id = cg.gymnast_id
+        WHERE cg.competition_id = $1
+        ORDER BY g.age_category_id
+      `, [competition_id]);
+  
+      const gymnasts = gymnastsResult.rows;
+  
+      if (gymnasts.length === 0) {
+        return res.status(400).json({ error: "Нет гимнасток для распределения" });
+      }
+  
+      const categoriesResult = await db.query(`
+        SELECT ac.id, array_agg(ca.apparatus) as apparatuses
+        FROM age_categories ac
+        LEFT JOIN category_apparatuses ca ON ca.category_id = ac.id
+        WHERE ac.competition_id = $1
+        GROUP BY ac.id
+      `, [competition_id]);
+  
+      const categories = categoriesResult.rows.reduce((acc, cat) => {
+        acc[cat.id] = cat.apparatuses;
+        return acc;
+      }, {});
+  
+      // Очистка данных
+      await db.query(`
+        DELETE FROM scores 
+        WHERE performance_id IN (
+            SELECT id FROM performances WHERE competition_id = $1
+        )
+      `, [competition_id]);
+  
+      await db.query(`
+        DELETE FROM performances WHERE competition_id = $1
+      `, [competition_id]);
+  
+      await db.query(`
+        DELETE FROM gymnast_streams 
+        WHERE stream_id IN (SELECT id FROM streams WHERE competition_id = $1)
+      `, [competition_id]);
+  
+      await db.query(`
+        DELETE FROM streams WHERE competition_id = $1
+      `, [competition_id]);
+  
+      let streamNumber = 1;
+      const groupedByCategory = {};
+      gymnasts.forEach(g => {
+        if (!g.age_category_id) {
+          console.warn(`Гимнастка ${g.name} (ID: ${g.id}) без категории, пропущена`);
+          return;
+        }
+        if (!groupedByCategory[g.age_category_id]) groupedByCategory[g.age_category_id] = [];
+        groupedByCategory[g.age_category_id].push(g);
+      });
+  
+      // Текущий таймер времени дня
+      let currentTime = new Date(`1970-01-01T${day_start_time}:00`);
+      const endTime = new Date(`1970-01-01T${day_end_time}:00`);
+  
+      for (const [categoryId, gymnastsList] of Object.entries(groupedByCategory)) {
+        const apparatuses = categories[categoryId];
+  
+        if (!apparatuses || apparatuses.length === 0) {
+          console.warn(`Категория ID ${categoryId} не имеет предметов, пропуск`);
+          continue;
+        }
+  
+        for (let i = 0; i < gymnastsList.length; i += 7) {
+          const batch = gymnastsList.slice(i, i + 7);
+  
+          const batchDurationMinutes = batch.length * 2; // 2 минуты на гимнастку
+          const estimatedDuration = `${Math.floor(batchDurationMinutes / 60)}:${(batchDurationMinutes % 60).toString().padStart(2, '0')}:00`;
+  
+          if (currentTime > endTime) {
+            return res.status(400).json({ error: "Недостаточно времени для всех потоков. Проверьте day_start_time и day_end_time" });
+          }
+  
+          const scheduled_start = new Date(currentTime); // Фиксируем текущее время для потока
+  
+          // Создаем поток
+          const newStream = await db.query(`
+            INSERT INTO streams (competition_id, age_category_id, stream_number, scheduled_start, estimated_duration)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id
+          `, [competition_id, categoryId, streamNumber, scheduled_start, estimatedDuration]);
+  
+          const streamId = newStream.rows[0].id;
+  
+          for (const gymnast of batch) {
+            await db.query(`
+              INSERT INTO gymnast_streams (gymnast_id, stream_id, competition_id)
+              VALUES ($1, $2, $3)
+            `, [gymnast.id, streamId, competition_id]);
+          
+  
+            for (const apparatus of apparatuses) {
+              const enumApparatus = apparatusMap[apparatus];
+              if (!enumApparatus) {
+                console.warn(`Неизвестный предмет "${apparatus}" у гимнастки ${gymnast.id}`);
+                continue;
+              }
+  
+              await db.query(`
+                INSERT INTO performances (gymnast_id, competition_id, stream_id, apparatus)
+                VALUES ($1, $2, $3, $4)
+              `, [gymnast.id, competition_id, streamId, enumApparatus]);
+            }
+          }
+  
+          streamNumber++;
+  
+          // Сдвигаем текущее время на длительность потока
+          currentTime.setMinutes(currentTime.getMinutes() + batchDurationMinutes);
+        }
+      }
+  
+      res.json({ message: "Автоматическое распределение завершено успешно" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Ошибка при автоматическом распределении", details: err.message });
+    }
+  }
+  
+  async manualAssignGymnast(req, res) {
+    try {
+      const { gymnast_id, stream_id, competition_id } = req.body;
+  
+      // Найти старый stream_id этой гимнастки в этом соревновании
+      const oldStreamRes = await db.query(`
+        SELECT stream_id FROM gymnast_streams
+        WHERE gymnast_id = $1 AND stream_id IN (
+          SELECT id FROM streams WHERE competition_id = $2
+        )
+        LIMIT 1
+      `, [gymnast_id, competition_id]);
+  
+      const oldStreamId = oldStreamRes.rows[0]?.stream_id;
+  
+      // Обновить связь в gymnast_streams
+      await db.query(`
+        DELETE FROM gymnast_streams
+        WHERE gymnast_id = $1
+          AND stream_id IN (
+            SELECT id FROM streams WHERE competition_id = $2
+          )
+      `, [gymnast_id, competition_id]);
+  
+      await db.query(`
+        INSERT INTO gymnast_streams (gymnast_id, stream_id, competition_id)
+        VALUES ($1, $2, $3)
+      `, [gymnast_id, stream_id, competition_id]);
+  
+      // ⏩ Обновить stream_id в performances (не удалять!)
+      if (oldStreamId) {
+        await db.query(`
+          UPDATE performances
+          SET stream_id = $1
+          WHERE gymnast_id = $2
+            AND stream_id = $3
+            AND competition_id = $4
+        `, [stream_id, gymnast_id, oldStreamId, competition_id]);
+      }
+  
+      res.json({ message: "Гимнастка перемещена без потери предметов" });
+  
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Ошибка при перемещении", details: err.message });
+    }
+  }
+
+  // Удаление соревнования и всех связанных данных
+async deleteCompetition(req, res) {
+  try {
+    const { competition_id } = req.params;
+
+    // Удаляем сначала дочерние зависимости вручную (если нет ON DELETE CASCADE)
+    await db.query(`DELETE FROM scores WHERE performance_id IN (
+      SELECT id FROM performances WHERE competition_id = $1
+    )`, [competition_id]);
+
+    await db.query(`DELETE FROM performances WHERE competition_id = $1`, [competition_id]);
+
+    await db.query(`DELETE FROM gymnast_streams 
+      WHERE stream_id IN (SELECT id FROM streams WHERE competition_id = $1)`, [competition_id]);
+
+    await db.query(`DELETE FROM streams WHERE competition_id = $1`, [competition_id]);
+
+    await db.query(`DELETE FROM judging_panels WHERE competition_id = $1`, [competition_id]);
+
+    await db.query(`DELETE FROM results WHERE competition_id = $1`, [competition_id]);
+
+    await db.query(`DELETE FROM competition_days WHERE competition_id = $1`, [competition_id]);
+
+    await db.query(`DELETE FROM competition_gymnasts WHERE competition_id = $1`, [competition_id]);
+
+    await db.query(`DELETE FROM age_categories WHERE competition_id = $1`, [competition_id]);
+
+    // Удаление самого соревнования
+    const deleted = await db.query(`DELETE FROM competitions WHERE id = $1 RETURNING *`, [competition_id]);
+
+    if (deleted.rows.length === 0) {
+      return res.status(404).json({ error: "Соревнование не найдено" });
+    }
+
+    res.json({ message: "Соревнование успешно удалено" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка при удалении соревнования", details: err.message });
+  }
+}
+
 }
 
 module.exports = new CompetitionController();

@@ -480,3 +480,31 @@ table th {
   border-radius: 4px;
   margin-bottom: 20px;
 }
+
+.back-button, .delete-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.back-button {
+  background-color: #e9ecef;
+}
+
+.back-button:hover {
+  background-color: #d6d8db;
+}
+
+
+.delete-button {
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  background: transparent;
+}
+
+.delete-button:hover {
+  background: rgba(220, 53, 69, 0.1);
+}

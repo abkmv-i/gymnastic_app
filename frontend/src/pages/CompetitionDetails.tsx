@@ -72,6 +72,7 @@ const CompetitionDetails: React.FC = () => {
   return (
     <div className="section-container">
       <div className="competition-header">
+        
         <h1>{competition.name}</h1>
         <div className="competition-meta">
           <span>Дата: {new Date(competition.date).toLocaleDateString()}</span>

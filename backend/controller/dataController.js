@@ -195,53 +195,87 @@ class DataController {
       async getAgeCategories(req, res) {
         try {
             const { competitionId } = req.params;
-    
-            const categories = await db.query(
+
+            const categoriesResult = await db.query(
                 `SELECT id, name, min_birth_year, max_birth_year, description
                  FROM age_categories
                  WHERE competition_id = $1
                  ORDER BY min_birth_year`,
                 [competitionId]
             );
-    
-            res.json(categories.rows);
+
+            const categories = categoriesResult.rows;
+
+            // Получаем предметы для всех категорий
+            const apparatusResult = await db.query(
+                `SELECT category_id, apparatus FROM category_apparatuses
+                 WHERE category_id = ANY($1::int[])`,
+                [categories.map(c => c.id)]
+            );
+
+            // Группируем предметы по категориям
+            const apparatusMap = {};
+            apparatusResult.rows.forEach(row => {
+                if (!apparatusMap[row.category_id]) {
+                    apparatusMap[row.category_id] = [];
+                }
+                apparatusMap[row.category_id].push(row.apparatus);
+            });
+
+            // Добавляем список предметов к каждой категории
+            const enrichedCategories = categories.map(cat => ({
+                ...cat,
+                apparatuses: apparatusMap[cat.id] || []
+            }));
+
+            res.json(enrichedCategories);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Не удалось получить категории для соревнования" });
+            res.status(500).json({ error: "Не удалось получить категории с предметами" });
         }
     }
     
 
     async addAgeCategory(req, res) {
-      try {
-          const { competitionId } = req.params;
-          const { name, minBirthYear, maxBirthYear, description } = req.body;
-  
-          // Проверка уникальности названия в рамках соревнования
-          const existing = await db.query(
-              'SELECT 1 FROM age_categories WHERE name = $1 AND competition_id = $2',
-              [name, competitionId]
-          );
-  
-          if (existing.rows.length > 0) {
-              return res.status(400).json({ 
-                  error: "Категория с таким названием уже существует для этого соревнования" 
-              });
-          }
-  
-          const newCategory = await db.query(
-              `INSERT INTO age_categories (name, min_birth_year, max_birth_year, description, competition_id) 
-               VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-              [name, minBirthYear, maxBirthYear, description || null, competitionId]
-          );
-  
-          res.status(201).json(newCategory.rows[0]);
-      } catch (err) {
-          console.error(err);
-          res.status(500).json({ error: "Не удалось добавить возрастную категорию" });
-      }
-  }
-  
+        try {
+            const { competitionId } = req.params;
+            const { name, minBirthYear, maxBirthYear, description, apparatuses } = req.body;
+
+            if (!apparatuses || !Array.isArray(apparatuses) || apparatuses.length === 0) {
+                return res.status(400).json({ error: "Необходимо выбрать хотя бы один предмет" });
+            }
+
+            const existing = await db.query(
+                'SELECT 1 FROM age_categories WHERE name = $1 AND competition_id = $2',
+                [name, competitionId]
+            );
+
+            if (existing.rows.length > 0) {
+                return res.status(400).json({ error: "Категория с таким названием уже существует" });
+            }
+
+            const newCategory = await db.query(
+                `INSERT INTO age_categories (name, min_birth_year, max_birth_year, description, competition_id) 
+                 VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+                [name, minBirthYear, maxBirthYear, description || null, competitionId]
+            );
+
+            const categoryId = newCategory.rows[0].id;
+
+            // Вставляем предметы
+            for (const apparatus of apparatuses) {
+                await db.query(
+                    `INSERT INTO category_apparatuses (category_id, apparatus) VALUES ($1, $2)`,
+                    [categoryId, apparatus]
+                );
+            }
+
+            res.status(201).json({ ...newCategory.rows[0], apparatuses });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: "Не удалось добавить категорию" });
+        }
+    }
     
 
   async deleteAgeCategory(req, res) {
@@ -273,10 +307,10 @@ class DataController {
 }
 
 
-  async updateAgeCategory(req, res) {
+async updateAgeCategory(req, res) {
     try {
         const { id } = req.params;
-        const { name, minBirthYear, maxBirthYear, description } = req.body;
+        const { name, minBirthYear, maxBirthYear, description, apparatuses } = req.body;
 
         const updated = await db.query(
             `UPDATE age_categories 
@@ -290,12 +324,24 @@ class DataController {
             return res.status(404).json({ error: "Категория не найдена" });
         }
 
-        res.json(updated.rows[0]);
+        // Удаляем старые предметы
+        await db.query(`DELETE FROM category_apparatuses WHERE category_id = $1`, [id]);
+
+        // Вставляем новые предметы
+        for (const apparatus of apparatuses) {
+            await db.query(
+                `INSERT INTO category_apparatuses (category_id, apparatus) VALUES ($1, $2)`,
+                [id, apparatus]
+            );
+        }
+
+        res.json({ ...updated.rows[0], apparatuses });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Не удалось обновить категорию" });
     }
 }
+
 
 
 }

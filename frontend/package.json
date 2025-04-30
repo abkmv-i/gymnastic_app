@@ -31,12 +31,15 @@
     "next-images": "^1.8.5",
     "node-sass": "^7.0.3",
     "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-confirm-alert": "^3.0.6",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-redux": "^9.0.4",
     "react-router-dom": "^6.20.1",
     "react-scripts": "5.0.1",
     "react-select": "^5.8.2",
+    "react-toastify": "^11.0.5",
     "store": "^2.0.12",
     "styled-component": "^2.8.0",
     "timers-browserify": "^2.0.12",
@@ -70,6 +73,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-beautiful-dnd": "^13.1.8",
     "@types/xml2js": "^0.4.14",
     "react-app-rewired": "^2.2.1",
     "webpack": "^5.96.1",

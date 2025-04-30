@@ -45,6 +45,7 @@ export interface User {
     min_birth_year: number;
     max_birth_year: number;
     description?: string;
+    apparatuses?: string[];   // Добавляем список предметов
   }
   
   export interface Gymnast {
@@ -130,4 +131,8 @@ export interface User {
     setAgeCategories: React.Dispatch<React.SetStateAction<AgeCategory[]>>;
     competitionId: number;
   }
+  export interface ExtendedStream extends Stream {
+    gymnasts?: (Gymnast & { apparatuses: string[] })[];
+  }
+  
   

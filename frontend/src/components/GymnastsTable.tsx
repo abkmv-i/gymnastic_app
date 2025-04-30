@@ -14,7 +14,9 @@ const GymnystsTable: React.FC<GymnastsTableProps> = ({
     const [newGymnast, setNewGymnast] = useState({ name: '', birth_year: '', coach: '', city: '', age_category_id: '' });
     const [editingId, setEditingId] = useState<number | null>(null);
     const [isEditing, setIsEditing] = useState(false);
-
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [gymnastToDelete, setGymnastToDelete] = useState<Gymnast | null>(null);
+    
     const [selectedFile, setSelectedFile] = useState<File | null>(null);  // Для хранения выбранного файла
 
     const resetForm = () => {
@@ -102,6 +104,19 @@ const GymnystsTable: React.FC<GymnastsTableProps> = ({
      })
       .catch(() => alert('Ошибка при назначении категории'));
     };
+    const confirmDeleteGymnast = () => {
+      if (gymnastToDelete && onDelete) {
+        onDelete(gymnastToDelete.id);
+        setShowDeleteModal(false);
+        setGymnastToDelete(null);
+      }
+    };
+    
+    const cancelDelete = () => {
+      setShowDeleteModal(false);
+      setGymnastToDelete(null);
+    };
+    
 
     const tabs = [
       { id: 'all', label: 'Все гимнастки' },
@@ -219,7 +234,12 @@ const GymnystsTable: React.FC<GymnastsTableProps> = ({
                       </td>
                       <td className="actions-cell">
                           <button className="btn small edit" onClick={() => handleEditGymnast(gymnast)}>✏️</button>
-                          <button className="btn small delete" onClick={() => onDelete && onDelete(gymnast.id)}>🗑️</button>
+                          <button className="btn small delete" 
+                          onClick={() => {
+                            setGymnastToDelete(gymnast);
+                            setShowDeleteModal(true);
+                          }}
+                          >🗑️</button>
                       </td>
                   </tr>
                   );
@@ -227,6 +247,18 @@ const GymnystsTable: React.FC<GymnastsTableProps> = ({
               </tbody>
           </table>
         </div>
+        {showDeleteModal && gymnastToDelete && (
+          <div className="modal-backdrop">
+            <div className="modal">
+              <h2>Удалить гимнастку {gymnastToDelete.name}?</h2>
+              <div className="modal-buttons">
+                <button className="cancel" onClick={cancelDelete}>Отмена</button>
+                <button className="confirm" onClick={confirmDeleteGymnast}>Удалить</button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     );
 };

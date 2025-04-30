@@ -16,7 +16,7 @@ interface ExtendedResult extends Result {
   }[];
 }
 
-const ResultsTable: React.FC<{
+const EditResultsTable: React.FC<{
   results: ExtendedResult[];
   gymnasts: Gymnast[];
   ageCategories: AgeCategory[];
@@ -65,8 +65,7 @@ const ResultsTable: React.FC<{
       'ball': 'Мяч',
       'clubs': 'Булавы',
       'ribbon': 'Лента',
-      'rope': 'Скакалка',
-      'no_apparatus': 'Б/П'
+      'rope': 'Скакалка'
     };
     return translations[apparatus.toLowerCase()] || apparatus;
   };
@@ -221,4 +220,4 @@ const ResultsTable: React.FC<{
   );
 };
 
-export default ResultsTable;
+export default EditResultsTable;
