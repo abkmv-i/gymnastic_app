@@ -3,11 +3,11 @@ module.exports = (req, res, next) => {
     try {
         // Здесь должна быть ваша логика проверки аутентификации
         // Например, проверка JWT токена или сессии
-        
+
         // Временная заглушка - пропускаем все запросы
         console.log("Auth middleware - request allowed");
         next();
-        
+
         // Реальный пример проверки токена:
         /*
         const token = req.headers.authorization?.split(' ')[1];

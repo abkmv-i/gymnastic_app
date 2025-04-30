@@ -1,4 +1,4 @@
-const Router = require ('express')
+const Router = require('express')
 const router = new Router()
 const competitionController = require("../controller//competitionController");
 const authMiddleware = require("../middleware/authMiddleware");

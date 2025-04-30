@@ -7,7 +7,7 @@
     font-family: Arial, sans-serif;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .competition-form h1 {
@@ -103,12 +103,12 @@
     .competition-form {
         padding: 15px;
     }
-    
+
     .competition-form .form-actions {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .competition-form .btn-primary,
     .competition-form .btn-secondary {
         width: 100%;

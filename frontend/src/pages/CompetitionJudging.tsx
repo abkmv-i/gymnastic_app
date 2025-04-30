@@ -1,92 +1,92 @@
 // CompetitionJudging.tsx (страница судейства)
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, {useState, useEffect} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import { Gymnast, Performance, Score } from '../models/types';
+import {Gymnast, Performance, Score} from '../models/types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import JudgingForm from '../components/JudgingForm';
-import { useAuth } from '../context/AuthContext';
+import {useAuth} from '../context/AuthContext';
 
 const CompetitionJudging: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [gymnasts, setGymnasts] = useState<Gymnast[]>([]);
-  const [performances, setPerformances] = useState<Performance[]>([]);
-  const [selectedGymnast, setSelectedGymnast] = useState<string>('');
-  const [selectedPerformance, setSelectedPerformance] = useState<Performance | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const { user } = useAuth();
+    const {id} = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const [gymnasts, setGymnasts] = useState<Gymnast[]>([]);
+    const [performances, setPerformances] = useState<Performance[]>([]);
+    const [selectedGymnast, setSelectedGymnast] = useState<string>('');
+    const [selectedPerformance, setSelectedPerformance] = useState<Performance | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const {user} = useAuth();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [gymnastsRes, performancesRes] = await Promise.all([
-          axios.get<Gymnast[]>(`/competitions/${id}/gymnasts`),
-          axios.get<Performance[]>(`/competitions/${id}/performances`),
-        ]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [gymnastsRes, performancesRes] = await Promise.all([
+                    axios.get<Gymnast[]>(`/competitions/${id}/gymnasts`),
+                    axios.get<Performance[]>(`/competitions/${id}/performances`),
+                ]);
 
-        setGymnasts(gymnastsRes.data);
-        setPerformances(performancesRes.data);
-      } catch (err) {
-        setError('Failed to fetch data');
-      } finally {
-        setLoading(false);
-      }
+                setGymnasts(gymnastsRes.data);
+                setPerformances(performancesRes.data);
+            } catch (err) {
+                setError('Failed to fetch data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [id]);
+
+    const handleGymnastChange = (gymnastId: string) => {
+        setSelectedGymnast(gymnastId);
+        const performance = performances.find(p => p.gymnast_id === parseInt(gymnastId));
+        setSelectedPerformance(performance || null);
     };
 
-    fetchData();
-  }, [id]);
+    const handleSubmitScore = async (scoreData: Omit<Score, 'id' | 'created_at'>) => {
+        try {
+            await axios.post('/scores', scoreData);
+            navigate(`/competitions/${id}/results`);
+        } catch (err) {
+            setError('Failed to submit score');
+        }
+    };
 
-  const handleGymnastChange = (gymnastId: string) => {
-    setSelectedGymnast(gymnastId);
-    const performance = performances.find(p => p.gymnast_id === parseInt(gymnastId));
-    setSelectedPerformance(performance || null);
-  };
+    if (loading) return <LoadingSpinner/>;
+    if (error) return <div className="error-message">{error}</div>;
 
-  const handleSubmitScore = async (scoreData: Omit<Score, 'id' | 'created_at'>) => {
-    try {
-      await axios.post('/scores', scoreData);
-      navigate(`/competitions/${id}/results`);
-    } catch (err) {
-      setError('Failed to submit score');
-    }
-  };
+    return (
+        <div className="container">
+            <h1>Judging Panel</h1>
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="error-message">{error}</div>;
+            <div className="judging-container">
+                <div className="gymnast-selector">
+                    <label htmlFor="gymnast">Select Gymnast:</label>
+                    <select
+                        id="gymnast"
+                        value={selectedGymnast}
+                        onChange={(e) => handleGymnastChange(e.target.value)}
+                    >
+                        <option value="">-- Select Gymnast --</option>
+                        {gymnasts.map(gymnast => (
+                            <option key={gymnast.id} value={gymnast.id}>
+                                {gymnast.name} ({gymnast.birth_year})
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-  return (
-    <div className="container">
-      <h1>Judging Panel</h1>
-      
-      <div className="judging-container">
-        <div className="gymnast-selector">
-          <label htmlFor="gymnast">Select Gymnast:</label>
-          <select
-            id="gymnast"
-            value={selectedGymnast}
-            onChange={(e) => handleGymnastChange(e.target.value)}
-          >
-            <option value="">-- Select Gymnast --</option>
-            {gymnasts.map(gymnast => (
-              <option key={gymnast.id} value={gymnast.id}>
-                {gymnast.name} ({gymnast.birth_year})
-              </option>
-            ))}
-          </select>
+                {selectedPerformance && (
+                    <JudgingForm
+                        performance={selectedPerformance}
+                        judgeId={user?.id || 0}
+                        onSubmit={handleSubmitScore}
+                    />
+                )}
+            </div>
         </div>
-
-        {selectedPerformance && (
-          <JudgingForm 
-            performance={selectedPerformance} 
-            judgeId={user?.id || 0}
-            onSubmit={handleSubmitScore}
-          />
-        )}
-      </div>
-    </div>
-  );
+    );
 };
 
 export default CompetitionJudging;

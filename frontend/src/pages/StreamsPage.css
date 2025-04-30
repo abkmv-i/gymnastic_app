@@ -1,27 +1,27 @@
 .streams-page {
     padding: 20px;
-  }
-  
-  .streams-page .header {
+}
+
+.streams-page .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-  }
-  
-  .streams-page h1 {
+}
+
+.streams-page h1 {
     margin: 0;
-  }
-  
-  .streams-page button {
+}
+
+.streams-page button {
     padding: 8px 16px;
     background-color: #3498db;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-  }
-  
-  .streams-page button:hover {
+}
+
+.streams-page button:hover {
     background-color: #2980b9;
-  }
+}

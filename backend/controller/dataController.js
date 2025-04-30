@@ -4,38 +4,38 @@ class DataController {
     async uploadGymnasts(req, res) {
         try {
             // Логика загрузки файла с гимнастками
-            res.json({ message: "Gymnasts uploaded successfully" });
+            res.json({message: "Gymnasts uploaded successfully"});
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Failed to upload gymnasts" });
+            res.status(500).json({error: "Failed to upload gymnasts"});
         }
     }
 
     async uploadJudges(req, res) {
         try {
             // Логика загрузки файла с судьями
-            res.json({ message: "Judges uploaded successfully" });
+            res.json({message: "Judges uploaded successfully"});
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Failed to upload judges" });
+            res.status(500).json({error: "Failed to upload judges"});
         }
     }
 
     async judgePerformance(req, res) {
         try {
-            const { gymnast_id, judge_id, apparatus, A_score, E_score, DA_score } = req.body;
+            const {gymnast_id, judge_id, apparatus, A_score, E_score, DA_score} = req.body;
 
             // Логика оценки выступления
-            res.json({ message: "Score recorded successfully" });
+            res.json({message: "Score recorded successfully"});
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Failed to record score" });
+            res.status(500).json({error: "Failed to record score"});
         }
     }
 
     async getGymnastResults(req, res) {
         try {
-            const { gymnast_id } = req.params;
+            const {gymnast_id} = req.params;
 
             const results = await db.query(
                 "SELECT * FROM results WHERE gymnast_id = $1",
@@ -45,7 +45,7 @@ class DataController {
             res.json(results.rows[0]);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Failed to fetch results" });
+            res.status(500).json({error: "Failed to fetch results"});
         }
     }
 
@@ -67,28 +67,28 @@ class DataController {
 
     // Пример контроллера на сервере
     async getCompetitionProtocols(req, res) {
-      try {
-        const { competition_id } = req.query;
+        try {
+            const {competition_id} = req.query;
 
-        // Объединяем results и gymnasts по gymnast_id.
-        // Предположим, вся ФИО хранится в gymnasts.name
-        // Добавляем ORDER BY r.rank, если нужно сортировать по месту.
-        const protocols = await db.query(
-          "SELECT r.id, r.rank, r.total_score, r.a_score, r.e_score, r.da_score, r.created_at, r.competition_id, r.gymnast_id, g.name AS gymnast_name FROM results AS r JOIN gymnasts AS g ON r.gymnast_id = g.id WHERE r.competition_id = $1 ORDER BY r.rank ASC",
-          [competition_id]
-        );
+            // Объединяем results и gymnasts по gymnast_id.
+            // Предположим, вся ФИО хранится в gymnasts.name
+            // Добавляем ORDER BY r.rank, если нужно сортировать по месту.
+            const protocols = await db.query(
+                "SELECT r.id, r.rank, r.total_score, r.a_score, r.e_score, r.da_score, r.created_at, r.competition_id, r.gymnast_id, g.name AS gymnast_name FROM results AS r JOIN gymnasts AS g ON r.gymnast_id = g.id WHERE r.competition_id = $1 ORDER BY r.rank ASC",
+                [competition_id]
+            );
 
-        res.json(protocols.rows);
-      } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Failed to fetch protocols" });
-      }
+            res.json(protocols.rows);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({error: "Failed to fetch protocols"});
+        }
     }
 
 
     async getBrigadeResults(req, res) {
         try {
-            const { competition_id, brigade } = req.query;
+            const {competition_id, brigade} = req.query;
 
             const results = await db.query(
                 "SELECT * FROM scores WHERE competition_id = $1 AND brigade = $2",
@@ -98,13 +98,13 @@ class DataController {
             res.json(results.rows);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Failed to fetch brigade results" });
+            res.status(500).json({error: "Failed to fetch brigade results"});
         }
     }
 
     async getDetailedResults(req, res) {
         try {
-            const { gymnast_id } = req.params;
+            const {gymnast_id} = req.params;
 
             const details = await db.query(
                 `SELECT * FROM scores
@@ -117,84 +117,84 @@ class DataController {
             res.json(details.rows);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Failed to fetch detailed results" });
+            res.status(500).json({error: "Failed to fetch detailed results"});
         }
     }
 
     async getAllCompetitions(req, res) {
         try {
-          const result = await db.query("SELECT id, name, date, location FROM competitions");
-          res.json(result.rows);
+            const result = await db.query("SELECT id, name, date, location FROM competitions");
+            res.json(result.rows);
         } catch (err) {
-          console.error(err);
-          res.status(500).json({ error: "Failed to fetch competitions" });
+            console.error(err);
+            res.status(500).json({error: "Failed to fetch competitions"});
         }
-      }
+    }
 
-      async getListGymnastics(req, res){
-      try {
-                const result = await db.query("SELECT id, name, birth_year, club FROM gymnasts");
-                res.json(result.rows);
-              } catch (err) {
-                console.error(err);
-                res.status(500).json({ error: "Failed to fetch competitions" });
-              }
-      }
-
-      // Получить информацию о выбранном соревновании
-      async getCompetitionByID(req, res) {
+    async getListGymnastics(req, res) {
         try {
-          const { id } = req.params;
-      
-          // Получаем основную информацию о соревновании
-          const competition = await db.query(
-            "SELECT id, name, date, location, status FROM competitions WHERE id = $1",
-            [id]
-          );
-      
-          if (competition.rows.length === 0) {
-            return res.status(404).json({ error: "Competition not found" });
-          }
-      
-          // Получаем гимнасток (используем LEFT JOIN на случай отсутствия связей)
-          const gymnasts = await db.query(
-            `SELECT DISTINCT g.id, g.name, g.birth_year, g.city
+            const result = await db.query("SELECT id, name, birth_year, club FROM gymnasts");
+            res.json(result.rows);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({error: "Failed to fetch competitions"});
+        }
+    }
+
+    // Получить информацию о выбранном соревновании
+    async getCompetitionByID(req, res) {
+        try {
+            const {id} = req.params;
+
+            // Получаем основную информацию о соревновании
+            const competition = await db.query(
+                "SELECT id, name, date, location, status FROM competitions WHERE id = $1",
+                [id]
+            );
+
+            if (competition.rows.length === 0) {
+                return res.status(404).json({error: "Competition not found"});
+            }
+
+            // Получаем гимнасток (используем LEFT JOIN на случай отсутствия связей)
+            const gymnasts = await db.query(
+                `SELECT DISTINCT g.id, g.name, g.birth_year, g.city
              FROM gymnasts g
              LEFT JOIN gymnast_streams gs ON g.id = gs.gymnast_id
              LEFT JOIN streams s ON gs.stream_id = s.id
              WHERE s.competition_id = $1 OR g.id IN (
                SELECT gymnast_id FROM results WHERE competition_id = $1
              )`,
-            [id]
-          );
-      
-          // Получаем судей (используем альтернативный подход)
-          const judges = await db.query(
-            `SELECT DISTINCT j.id, j.name, pj.position AS category
+                [id]
+            );
+
+            // Получаем судей (используем альтернативный подход)
+            const judges = await db.query(
+                `SELECT DISTINCT j.id, j.name, pj.position AS category
              FROM judges j
              JOIN panel_judges pj ON j.id = pj.judge_id
              JOIN judging_panels jp ON pj.panel_id = jp.id
              WHERE jp.competition_id = $1`,
-            [id]
-          );
-      
-          res.json({
-            ...competition.rows[0],
-            gymnasts: gymnasts.rows,
-            judges: judges.rows
-          });
-        } catch (err) {
-          console.error("Detailed error:", err);
-          res.status(500).json({ 
-            error: "Failed to fetch competition details",
-            details: err.message 
-          });
-        }
-      }
+                [id]
+            );
 
-      async getAgeCategories(req, res) {
+            res.json({
+                ...competition.rows[0],
+                gymnasts: gymnasts.rows,
+                judges: judges.rows
+            });
+        } catch (err) {
+            console.error("Detailed error:", err);
+            res.status(500).json({
+                error: "Failed to fetch competition details",
+                details: err.message
+            });
+        }
+    }
+
+    async getAgeCategories(req, res) {
         try {
-            const { competitionId } = req.params;
+            const {competitionId} = req.params;
 
             const categoriesResult = await db.query(
                 `SELECT id, name, min_birth_year, max_birth_year, description
@@ -231,18 +231,18 @@ class DataController {
             res.json(enrichedCategories);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Не удалось получить категории с предметами" });
+            res.status(500).json({error: "Не удалось получить категории с предметами"});
         }
     }
-    
+
 
     async addAgeCategory(req, res) {
         try {
-            const { competitionId } = req.params;
-            const { name, minBirthYear, maxBirthYear, description, apparatuses } = req.body;
+            const {competitionId} = req.params;
+            const {name, minBirthYear, maxBirthYear, description, apparatuses} = req.body;
 
             if (!apparatuses || !Array.isArray(apparatuses) || apparatuses.length === 0) {
-                return res.status(400).json({ error: "Необходимо выбрать хотя бы один предмет" });
+                return res.status(400).json({error: "Необходимо выбрать хотя бы один предмет"});
             }
 
             const existing = await db.query(
@@ -251,7 +251,7 @@ class DataController {
             );
 
             if (existing.rows.length > 0) {
-                return res.status(400).json({ error: "Категория с таким названием уже существует" });
+                return res.status(400).json({error: "Категория с таким названием уже существует"});
             }
 
             const newCategory = await db.query(
@@ -270,78 +270,77 @@ class DataController {
                 );
             }
 
-            res.status(201).json({ ...newCategory.rows[0], apparatuses });
+            res.status(201).json({...newCategory.rows[0], apparatuses});
         } catch (err) {
             console.error(err);
-            res.status(500).json({ error: "Не удалось добавить категорию" });
+            res.status(500).json({error: "Не удалось добавить категорию"});
         }
     }
-    
 
-  async deleteAgeCategory(req, res) {
-    try {
-        const { id } = req.params;
 
-        // Проверяем, используется ли категория в streams или у гимнастов
-        const inUse = await db.query(
-            `SELECT 1 FROM streams WHERE age_category_id = $1 LIMIT 1`,
-            [id]
-        );
+    async deleteAgeCategory(req, res) {
+        try {
+            const {id} = req.params;
 
-        if (inUse.rows.length > 0) {
-            return res.status(400).json({ 
-                error: "Нельзя удалить категорию, она используется в потоках соревнования"
-            });
+            // Проверяем, используется ли категория в streams или у гимнастов
+            const inUse = await db.query(
+                `SELECT 1 FROM streams WHERE age_category_id = $1 LIMIT 1`,
+                [id]
+            );
+
+            if (inUse.rows.length > 0) {
+                return res.status(400).json({
+                    error: "Нельзя удалить категорию, она используется в потоках соревнования"
+                });
+            }
+
+            await db.query(
+                'DELETE FROM age_categories WHERE id = $1',
+                [id]
+            );
+
+            res.json({message: "Категория успешно удалена"});
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({error: "Не удалось удалить категорию"});
         }
-
-        await db.query(
-            'DELETE FROM age_categories WHERE id = $1',
-            [id]
-        );
-
-        res.json({ message: "Категория успешно удалена" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Не удалось удалить категорию" });
     }
-}
 
 
-async updateAgeCategory(req, res) {
-    try {
-        const { id } = req.params;
-        const { name, minBirthYear, maxBirthYear, description, apparatuses } = req.body;
+    async updateAgeCategory(req, res) {
+        try {
+            const {id} = req.params;
+            const {name, minBirthYear, maxBirthYear, description, apparatuses} = req.body;
 
-        const updated = await db.query(
-            `UPDATE age_categories 
+            const updated = await db.query(
+                `UPDATE age_categories 
              SET name = $1, min_birth_year = $2, max_birth_year = $3, description = $4
              WHERE id = $5
              RETURNING *`,
-            [name, minBirthYear, maxBirthYear, description || null, id]
-        );
-
-        if (updated.rows.length === 0) {
-            return res.status(404).json({ error: "Категория не найдена" });
-        }
-
-        // Удаляем старые предметы
-        await db.query(`DELETE FROM category_apparatuses WHERE category_id = $1`, [id]);
-
-        // Вставляем новые предметы
-        for (const apparatus of apparatuses) {
-            await db.query(
-                `INSERT INTO category_apparatuses (category_id, apparatus) VALUES ($1, $2)`,
-                [id, apparatus]
+                [name, minBirthYear, maxBirthYear, description || null, id]
             );
+
+            if (updated.rows.length === 0) {
+                return res.status(404).json({error: "Категория не найдена"});
+            }
+
+            // Удаляем старые предметы
+            await db.query(`DELETE FROM category_apparatuses WHERE category_id = $1`, [id]);
+
+            // Вставляем новые предметы
+            for (const apparatus of apparatuses) {
+                await db.query(
+                    `INSERT INTO category_apparatuses (category_id, apparatus) VALUES ($1, $2)`,
+                    [id, apparatus]
+                );
+            }
+
+            res.json({...updated.rows[0], apparatuses});
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({error: "Не удалось обновить категорию"});
         }
-
-        res.json({ ...updated.rows[0], apparatuses });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Не удалось обновить категорию" });
     }
-}
-
 
 
 }

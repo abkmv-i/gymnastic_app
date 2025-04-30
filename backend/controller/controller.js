@@ -1,28 +1,31 @@
 const db = require('../db')
+
 class UserController {
-    async checkUser (req, res) {
+    async checkUser(req, res) {
         const {phone, password} = req.body
         const checkUser = await db.query(
             'SELECT * FROM people WHERE phone = $1 AND password = $2',
             [phone, password]
         );
-        if( checkUser.length !== 0)
-        if (phone === checkUser.rows[0].phone || password === checkUser.rows[0].password){
-            const farmerId = checkUser.rows[0].id;
-            const checkFarmerQuery = await db.query(
-                'SELECT EXISTS (SELECT 1 FROM farmer WHERE people_id = $1) AS is_farmer',
-                [farmerId]
-            );
-            const isFarmer = checkFarmerQuery.rows[0].is_farmer;
-            const result = Object.assign({}, checkUser.rows[0], { isFarmer });
-            res.json(result)
-        }
+        if (checkUser.length !== 0)
+            if (phone === checkUser.rows[0].phone || password === checkUser.rows[0].password) {
+                const farmerId = checkUser.rows[0].id;
+                const checkFarmerQuery = await db.query(
+                    'SELECT EXISTS (SELECT 1 FROM farmer WHERE people_id = $1) AS is_farmer',
+                    [farmerId]
+                );
+                const isFarmer = checkFarmerQuery.rows[0].is_farmer;
+                const result = Object.assign({}, checkUser.rows[0], {isFarmer});
+                res.json(result)
+            }
     }
+
     async getGoods(req, res) {
         const getGoods = await db.query('select * from goods'
-    );
+        );
         res.json(getGoods.rows)
     }
+
     async getPeopleId(req, res) {
         const {id} = req.body
         const getGoodsId = await db.query(
@@ -30,14 +33,16 @@ class UserController {
         );
         res.json(getGoodsId.rows)
     }
+
     async getGoodsId(req, res) {
         const {id} = req.body
         const getGoodsId = await db.query(
-            'select * from goods where farmer_id = $1;',[id]);
+            'select * from goods where farmer_id = $1;', [id]);
         res.json(getGoodsId.rows)
     }
+
     async buyItem(req, res) {
-        const { cart, cartTotal, myId } = req.body;
+        const {cart, cartTotal, myId} = req.body;
 
         for (const item of cart) {
             console.log(item.qty)
@@ -93,4 +98,5 @@ class UserController {
         console.log(getDealId)
     }
 }
+
 module.exports = new UserController()
