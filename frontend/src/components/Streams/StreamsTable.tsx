@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Stream, AgeCategory, Gymnast} from '../models/types';
+import {Stream, AgeCategory, Gymnast} from '../../models/types';
 import './StreamsTable.css';
 
 interface ExtendedStream extends Stream {

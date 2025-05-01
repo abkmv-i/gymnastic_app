@@ -11,7 +11,7 @@ router.post('/', gymnastController.addGymnast);
 router.put('/:id/assign-category', gymnastController.assignCategory);
 router.delete('/:id', gymnastController.deleteGymnast);
 router.put('/:id', gymnastController.updateGymnast);
-const upload = multer({dest: 'uploads/'});  // Временная папка для загрузок
+const upload = multer({dest: 'uploads/'});  
 
 router.post('/upload-gymnasts', upload.single('file'), gymnastController.fileGymnasts);
 module.exports = router;

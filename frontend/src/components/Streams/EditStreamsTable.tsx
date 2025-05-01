@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {AgeCategory, ExtendedStream} from '../models/types';
+import {AgeCategory, ExtendedStream} from '../../models/types';
 import './StreamsTable.css';
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

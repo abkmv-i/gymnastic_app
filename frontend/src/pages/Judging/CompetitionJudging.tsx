@@ -2,10 +2,10 @@
 import React, {useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import {Gymnast, Performance, Score} from '../models/types';
-import LoadingSpinner from '../components/LoadingSpinner';
-import JudgingForm from '../components/JudgingForm';
-import {useAuth} from '../context/AuthContext';
+import {Gymnast, Performance, Score} from '../../models/types';
+import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import JudgingForm from '../../components/Judges/JudgingForm';
+import {useAuth} from '../../context/AuthContext';
 
 const CompetitionJudging: React.FC = () => {
     const {id} = useParams<{ id: string }>();
@@ -22,8 +22,8 @@ const CompetitionJudging: React.FC = () => {
         const fetchData = async () => {
             try {
                 const [gymnastsRes, performancesRes] = await Promise.all([
-                    axios.get<Gymnast[]>(`/competitions/${id}/gymnasts`),
-                    axios.get<Performance[]>(`/competitions/${id}/performances`),
+                    axios.get<Gymnast[]>(`http://localhost:8080/competitions/${id}/gymnasts`),
+                    axios.get<Performance[]>(`http://localhost:8080/competitions/${id}/performances`),
                 ]);
 
                 setGymnasts(gymnastsRes.data);
@@ -46,7 +46,7 @@ const CompetitionJudging: React.FC = () => {
 
     const handleSubmitScore = async (scoreData: Omit<Score, 'id' | 'created_at'>) => {
         try {
-            await axios.post('/scores', scoreData);
+            await axios.post('http://localhost:8080/scores/judge', scoreData);
             navigate(`/competitions/${id}/results`);
         } catch (err) {
             setError('Failed to submit score');

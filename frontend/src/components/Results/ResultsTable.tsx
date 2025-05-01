@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Result, Gymnast, AgeCategory} from '../models/types';
+import {Result, Gymnast, AgeCategory} from '../../models/types';
 import './ResultsTable.css';
 
 interface ExtendedResult extends Result {
@@ -16,7 +16,7 @@ interface ExtendedResult extends Result {
     }[];
 }
 
-const EditResultsTable: React.FC<{
+const ResultsTable: React.FC<{
     results: ExtendedResult[];
     gymnasts: Gymnast[];
     ageCategories: AgeCategory[];
@@ -65,7 +65,8 @@ const EditResultsTable: React.FC<{
             'ball': 'Мяч',
             'clubs': 'Булавы',
             'ribbon': 'Лента',
-            'rope': 'Скакалка'
+            'rope': 'Скакалка',
+            'no_apparatus': 'Б/П'
         };
         return translations[apparatus.toLowerCase()] || apparatus;
     };
@@ -221,4 +222,4 @@ const EditResultsTable: React.FC<{
     );
 };
 
-export default EditResultsTable;
+export default ResultsTable;

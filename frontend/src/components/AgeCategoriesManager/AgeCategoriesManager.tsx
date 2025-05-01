@@ -1,11 +1,10 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {AgeCategory, AgeCategoriesManagerProps} from '../models/types';
+import {AgeCategory, AgeCategoriesManagerProps} from '../../models/types';
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-confirm-alert/src/react-confirm-alert.css';
-import './common.css';
-
+import '../../styles/common.css';
 const apparatusTypes = ['б/п', 'скакалка', 'обруч', 'мяч', 'булавы', 'лента'];
 
 const AgeCategoriesManager: React.FC<AgeCategoriesManagerProps> = ({

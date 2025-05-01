@@ -1,26 +1,23 @@
 import React, {useEffect, useState} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import {Competition, Gymnast, Judge, Stream, Result, AgeCategory} from '../models/types';
-import LoadingSpinner from '../components/LoadingSpinner';
-import Tabs from '../components/Tabs';
-import StreamsTable from '../components/StreamsTable';
-import ResultsTable from '../components/ResultsTable';
-import {useAuth} from '../context/AuthContext';
-import '../components/common.css';  // Подключаем твои стили
+import {Competition, Gymnast, Stream, Result, AgeCategory} from '../../models/types';
+import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import Tabs from '../../components/Common/Tabs';
+import StreamsTable from '../../components/Streams/StreamsTable';
+import ResultsTable from '../../components/Results/ResultsTable';
+import '../../styles/common.css';
 
 const CompetitionDetails: React.FC = () => {
     const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [competition, setCompetition] = useState<Competition | null>(null);
     const [gymnasts, setGymnasts] = useState<Gymnast[]>([]);
-    const [judges, setJudges] = useState<Judge[]>([]);
     const [streams, setStreams] = useState<Stream[]>([]);
     const [results, setResults] = useState<Result[]>([]);
     const [ageCategories, setAgeCategories] = useState<AgeCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('streams');
-    const {user} = useAuth();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,14 +25,12 @@ const CompetitionDetails: React.FC = () => {
                 const [
                     compRes,
                     gymnastsRes,
-                    judgesRes,
                     streamsRes,
                     resultsRes,
                     ageCategoriesRes
                 ] = await Promise.all([
                     axios.get<Competition>(`http://localhost:8080/competitions/${id}`),
                     axios.get<Gymnast[]>(`http://localhost:8080/competitions/${id}/gymnasts`),
-                    axios.get<Judge[]>(`http://localhost:8080/competitions/${id}/judges`),
                     axios.get<Stream[]>(`http://localhost:8080/competitions/${id}/streams-with-gymnasts`),
                     axios.get<Result[]>(`http://localhost:8080/competitions/${id}/results-with-details`),
                     axios.get<AgeCategory[]>(`http://localhost:8080/competitions/${id}/age-categories`)
@@ -43,7 +38,6 @@ const CompetitionDetails: React.FC = () => {
 
                 setCompetition(compRes.data);
                 setGymnasts(gymnastsRes.data);
-                setJudges(judgesRes.data);
                 setStreams(streamsRes.data);
                 setResults(resultsRes.data);
                 setAgeCategories(ageCategoriesRes.data);

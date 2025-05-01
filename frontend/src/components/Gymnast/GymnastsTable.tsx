@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {Gymnast, GymnastsTableProps} from '../models/types';
-import './common.css';
+import {Gymnast, GymnastsTableProps} from '../../models/types';
+import '../../styles/common.css';
 
 const GymnystsTable: React.FC<GymnastsTableProps> = ({
                                                          gymnasts,

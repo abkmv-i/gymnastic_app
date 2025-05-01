@@ -1,5 +1,5 @@
 import React from 'react';
-import {Competition} from '../models/types';
+import {Competition} from '../../models/types';
 import './CompetitionCard.css';
 
 interface CompetitionCardProps {

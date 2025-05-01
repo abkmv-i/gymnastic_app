@@ -730,6 +730,26 @@ class CompetitionController {
         }
     }
 
+    async getCompetitionPerformances(req, res) {
+        try {
+          const { competition_id } = req.params;
+      
+          const performances = await db.query(`
+            SELECT p.*, g.name as gymnast_name, g.birth_year
+            FROM performances p
+            JOIN gymnasts g ON g.id = p.gymnast_id
+            WHERE p.competition_id = $1
+            ORDER BY g.name
+          `, [competition_id]);
+      
+          res.json(performances.rows);
+        } catch (err) {
+          console.error(err);
+          res.status(500).json({ error: "Ошибка при получении выступлений" });
+        }
+      }
+      
+
 }
 
 module.exports = new CompetitionController();

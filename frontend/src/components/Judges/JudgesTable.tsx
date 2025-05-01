@@ -1,5 +1,5 @@
 import React from 'react';
-import {Judge} from '../models/types';
+import {Judge} from '../../models/types';
 import './JudgesTable.css';
 
 interface JudgesTableProps {

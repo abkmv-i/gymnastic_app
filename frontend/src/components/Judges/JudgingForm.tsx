@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Performance, Score} from '../models/types';
+import {Performance, Score} from '../../models/types';
 import './JudgingForm.css';
 
 interface JudgingFormProps {

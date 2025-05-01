@@ -1,18 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import {Competition} from '../models/types';
-import CompetitionCard from '../components/CompetitionCard';
-import LoadingSpinner from '../components/LoadingSpinner';
-import {useAuth} from '../context/AuthContext';
-import './HomePage.css'; // Подключаем стили
+import {Competition} from '../../models/types';
+import CompetitionCard from '../../components/CompetitionCard/CompetitionCard';
+import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import './HomePage.css'; 
 
 const HomePage: React.FC = () => {
     const [competitions, setCompetitions] = useState<Competition[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const {user} = useAuth();
 
     useEffect(() => {
         const fetchCompetitions = async () => {

@@ -7,7 +7,9 @@ module.exports = (req, res, next) => {
         // Временная заглушка - пропускаем все запросы
         console.log("Auth middleware - request allowed");
         next();
-
+        if (req.method === 'OPTIONS') {
+            return next(); // разрешить preflight
+          }
         // Реальный пример проверки токена:
         /*
         const token = req.headers.authorization?.split(' ')[1];

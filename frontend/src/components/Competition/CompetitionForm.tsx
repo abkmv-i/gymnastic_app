@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
-import {Competition} from '../models/types';
-import './common.css';  // Используем стили
+import {Competition} from '../../models/types';
+import '../../styles/common.css';
 
 interface CompetitionFormProps {
     initialData?: Omit<Competition, 'id' | 'created_at'>;

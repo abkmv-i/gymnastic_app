@@ -1,7 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="0e4a4bdd-9a9b-4742-a90f-f76662a282cb" name="Changes" comment="" />
+    <list default="true" id="0e4a4bdd-9a9b-4742-a90f-f76662a282cb" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/backend/controller/competitionController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/competitionController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controller/dataController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controller/dataController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routers/competitionRouter.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routers/competitionRouter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routers/dataRouter.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routers/dataRouter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routers/gymnastRouter.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routers/gymnastRouter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/AgeCategoriesManager.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/AgeCategoriesManager.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/CompetitionCard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/CompetitionCard.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/CompetitionForm.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/CompetitionForm.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/EditResultsTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/EditStreamsTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/GymnastsTable.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/GymnastsTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/JudgesTable.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/JudgesTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/JudgingForm.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/JudgingForm.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/LoadingSpinner.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/LoadingSpinner.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/PrivateRoute.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ResultsTable.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ResultsTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/StreamsTable.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/StreamsTable.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Tabs.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Tabs.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CompetitionCreate.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CompetitionDetails.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CompetitionDetails.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CompetitionEdit.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CompetitionJudging.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/CompetitionResults.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/GymnastsPage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/GymnastsPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/HomePage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/HomePage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/JudgesPage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/JudgesPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/JudgingForm.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/NotFoundPage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/NotFoundPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/StreamsPage.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/StreamsPage.tsx" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -25,7 +77,8 @@
     "WebServerToolWindowFactoryState": "false",
     "last_opened_file_path": "/Users/irinaabakumova/gymnastic_app",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "ts.external.directory.path": "/Applications/IntelliJ IDEA.app/Contents/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />

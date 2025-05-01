@@ -1,17 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import {Competition, Gymnast, AgeCategory, Stream, Result, ExtendedStream} from '../models/types';
-import LoadingSpinner from '../components/LoadingSpinner';
-import Tabs from '../components/Tabs';
-import CompetitionForm from '../components/CompetitionForm';
-import GymnastsTable from '../components/GymnastsTable';
-import {useAuth} from '../context/AuthContext';
-import AgeCategoriesManager from '../components/AgeCategoriesManager';
-import EditStreamsTable from '../components/EditStreamsTable';
-import '../components/common.css';  // Подключаем твои стили
-
-import '../App.css';
+import {Competition, Gymnast, AgeCategory, Stream, ExtendedStream} from '../../models/types';
+import LoadingSpinner from '../../components/Common/LoadingSpinner';
+import Tabs from '../../components/Common/Tabs';
+import CompetitionForm from '../../components/Competition/CompetitionForm';
+import GymnastsTable from '../../components/Gymnast/GymnastsTable';
+import AgeCategoriesManager from '../../components/AgeCategoriesManager/AgeCategoriesManager';
+import EditStreamsTable from '../../components/Streams/EditStreamsTable';
+import '../../styles/common.css';
+import '../../App.css';
 
 const CompetitionEdit: React.FC = () => {
     const {id} = useParams<{ id: string }>();

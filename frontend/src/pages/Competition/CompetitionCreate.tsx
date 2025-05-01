@@ -2,8 +2,8 @@
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
-import CompetitionForm from '../components/CompetitionForm';
-import {Competition} from '../models/types';
+import CompetitionForm from '../../components/Competition/CompetitionForm';
+import {Competition} from '../../models/types';
 
 const CompetitionCreate: React.FC = () => {
     const navigate = useNavigate();
