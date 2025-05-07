@@ -5,7 +5,7 @@ import {Competition} from '../../models/types';
 import CompetitionCard from '../../components/CompetitionCard/CompetitionCard';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import './HomePage.css'; 
-
+import '../../styles/common.css'
 const HomePage: React.FC = () => {
     const [competitions, setCompetitions] = useState<Competition[]>([]);
     const [loading, setLoading] = useState(true);
@@ -39,17 +39,15 @@ const HomePage: React.FC = () => {
             <div className="competition-header">
                 <h1>Cоревнования</h1>
             </div>
-            {/* {user?.role === 'admin' && ( */}
             <button
                 onClick={handleCreateCompetition}
-                className="create-button"
+                className="btn add"
                 aria-label="Создать новое соревнование"
             >
                 <span className="button-icon">+</span>
                 Новое соревнование
             </button>
-            {/* )} */}
-
+            <p></p>
             <div className="competitions-grid">
                 {competitions.length > 0 ? (
                     competitions.map(competition => (

@@ -12,7 +12,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
     username: string;
     password: string;
-    role: 'judge' | 'organizer';
+    // role: 'judge' | 'organizer';
 }
 
 export interface AuthResponse {
@@ -94,10 +94,13 @@ export interface Score {
     id: number;
     performance_id: number;
     judge_id: number;
-    brigade: 'A' | 'E' | 'DA' | 'DB';
+    role_id: number;
+    gymnast_id: number;
+    competition_id: number;
+    apparatus: string;
     score: number;
     created_at: string;
-}
+  }
 
 export interface Result {
     id: number;
@@ -135,5 +138,19 @@ export interface AgeCategoriesManagerProps {
 export interface ExtendedStream extends Stream {
     gymnasts?: (Gymnast & { apparatuses: string[] })[];
 }
+
+export interface Judge {
+    id: number;
+    name: string;
+    role: JudgeRole;
+  }
+
+  export interface JudgesTableProps {
+    judges: Judge[];
+    competitionId: number;
+    onUpdate: () => void;
+  }
+  export type JudgeRole = 'A1' |'A2' |'A3' |'A4' | 'E1' |'E2' |'E3' |'E4' | 'DA1' |'DA2' | 'DB1' |'DB2' | 'линейный судья' | 'хронометрист' | 'главный судья' | 'администратор';
+  
   
   

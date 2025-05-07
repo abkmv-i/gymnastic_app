@@ -5,7 +5,7 @@ const dataController = require("../controller/dataController");
 
 
 // Судейство
-router.post("/scores/judge", dataController.judgePerformance);
+// router.post("/scores/judge", dataController.judgePerformance);
 
 router.get("/competitions", dataController.getAllCompetitions);
 router.get("/competitions/:id", dataController.getCompetitionByID);

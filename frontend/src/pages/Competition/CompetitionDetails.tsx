@@ -7,6 +7,7 @@ import Tabs from '../../components/Common/Tabs';
 import StreamsTable from '../../components/Streams/StreamsTable';
 import ResultsTable from '../../components/Results/ResultsTable';
 import '../../styles/common.css';
+import { useAuth } from '../../context/AuthContext';
 
 const CompetitionDetails: React.FC = () => {
     const {id} = useParams<{ id: string }>();
@@ -18,6 +19,9 @@ const CompetitionDetails: React.FC = () => {
     const [ageCategories, setAgeCategories] = useState<AgeCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('streams');
+    const { user } = useAuth();
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isJudge, setIsJudge] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -49,8 +53,30 @@ const CompetitionDetails: React.FC = () => {
         };
 
         fetchData();
+        fetchIsAdmin();
+        fetchIsJudge();
     }, [id]);
-
+    const fetchIsAdmin = async () => {
+        try {
+            const res = await axios.get<boolean>(`http://localhost:8080/competitions/${id}/is-admin`);
+            setIsAdmin(res.data);
+        } catch {
+            console.error("Не удалось проверить права администратора");
+        }
+    };
+    const fetchIsJudge = async () => {
+        try {
+          const res = await axios.get<{ judgeIds: number[] }>(
+            `http://localhost:8080/judges/competitions/${id}/judges/id`
+          );
+          if (user && res.data.judgeIds.includes(user.id)) {
+            setIsJudge(true);
+          }
+        } catch (err) {
+          console.error("Не удалось проверить является ли пользователь судьей", err);
+        }
+      };
+      
     const handleEdit = () => {
         navigate(`/competitions/${id}/edit`);
     };
@@ -74,13 +100,18 @@ const CompetitionDetails: React.FC = () => {
                 </div>
 
                 <div className="action-buttons">
-                    <button onClick={handleEdit} className="btn edit">
-                        Редактировать
-                    </button>
-                    <button onClick={handleJudge} className="btn add">
+                    {isAdmin && (
+                        <button onClick={handleEdit} className="btn edit">
+                            Редактировать
+                        </button>
+                    )}
+                    {isJudge && (
+                        <button onClick={handleJudge} className="btn add">
                         Судить
-                    </button>
+                        </button>
+                    )}
                 </div>
+
             </div>
 
             <Tabs

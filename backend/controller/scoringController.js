@@ -1,235 +1,148 @@
-const db = require("../db");
+const db = require('../db');
 
 class ScoringController {
-    // Запись оценки за выступление
-    async recordScore(req, res) {
-        try {
-            const {performance_id, judge_id, brigade, score} = req.body;
+  recalculateOneResult = async (gymnast_id, competition_id, apparatus) => {
+    const scoresRes = await db.query(
+      `SELECT s.score, jr.code
+       FROM scores s
+       JOIN judge_roles jr ON s.role_id = jr.id
+       WHERE s.gymnast_id = $1 AND s.competition_id = $2 AND s.apparatus = $3`,
+      [gymnast_id, competition_id, apparatus]
+    );
 
-            // Проверяем, существует ли уже оценка от этого судьи за это выступление
-            const existingScore = await db.query(
-                "SELECT * FROM scores WHERE performance_id = $1 AND judge_id = $2 AND brigade = $3",
-                [performance_id, judge_id, brigade]
-            );
+    const a = [], e = [], da = [], db_scores = [];
+    for (const { score, code } of scoresRes.rows) {
+      const numericScore = parseFloat(score);
+      if (code.startsWith('A')) a.push(numericScore);
+      else if (code.startsWith('E')) e.push(numericScore);
+      else if (code.startsWith('DA')) da.push(numericScore);
+      else if (code.startsWith('DB')) db_scores.push(numericScore);
+    }
+    
 
-            if (existingScore.rows.length > 0) {
-                return res.status(400).json({error: "Score already recorded for this performance"});
-            }
+    const mean = (arr) => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0;
+    const trimmedMean = (arr) => {
+      if (arr.length <= 2) return mean(arr);
+      const sorted = [...arr].sort((a, b) => a - b).slice(1, -1);
+      return mean(sorted);
+    };
 
-            const newScore = await db.query(
-                `INSERT INTO scores 
-                 (performance_id, judge_id, brigade, score) 
-                 VALUES ($1, $2, $3, $4) RETURNING *`,
-                [performance_id, judge_id, brigade, score]
-            );
+    const a_score = 10 - trimmedMean(a);
+    const e_score = 10 - trimmedMean(e);
+    const da_score = mean(da);
+    const db_score = mean(db_scores);
+    const total_score = a_score + e_score + da_score + db_score;
 
-            res.status(201).json(newScore.rows[0]);
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to record score"});
-        }
+    const gymnastRes = await db.query(
+      `SELECT birth_year FROM gymnasts WHERE id = $1`,
+      [gymnast_id]
+    );
+    if (gymnastRes.rows.length === 0) throw new Error("Гимнастка не найдена");
+
+    const birth_year = gymnastRes.rows[0].birth_year;
+
+    const ageCatRes = await db.query(
+      `SELECT id FROM age_categories
+       WHERE competition_id = $1 AND min_birth_year <= $2 AND max_birth_year >= $2
+       LIMIT 1`,
+      [competition_id, birth_year]
+    );
+    if (ageCatRes.rows.length === 0) throw new Error("Возрастная категория не найдена");
+
+    const age_category_id = ageCatRes.rows[0].id;
+
+    const exists = await db.query(
+      `SELECT id FROM results WHERE gymnast_id = $1 AND competition_id = $2 AND apparatus = $3`,
+      [gymnast_id, competition_id, apparatus]
+    );
+
+    if (exists.rows.length) {
+      await db.query(
+        `UPDATE results
+         SET a_score = $1, e_score = $2, da_score = $3, db_score = $4,
+             total_score = $5, age_category_id = $6
+         WHERE gymnast_id = $7 AND competition_id = $8 AND apparatus = $9`,
+        [a_score, e_score, da_score, db_score, total_score, age_category_id,
+         gymnast_id, competition_id, apparatus]
+      );
+    } else {
+      await db.query(
+        `INSERT INTO results (gymnast_id, competition_id, apparatus,
+          a_score, e_score, da_score, db_score, total_score, age_category_id, rank)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)`,
+        [gymnast_id, competition_id, apparatus, a_score, e_score, da_score, db_score, total_score, age_category_id]
+      );
     }
 
-    // Расчет итоговой оценки за выступление
-    async calculatePerformanceResult(req, res) {
-        try {
-            const {performance_id} = req.params;
+    await db.query(`
+      WITH ranked AS (
+        SELECT id,
+               RANK() OVER (
+                 PARTITION BY age_category_id, apparatus
+                 ORDER BY total_score DESC
+               ) AS r
+        FROM results
+        WHERE competition_id = $1
+      )
+      UPDATE results r
+      SET rank = ranked.r
+      FROM ranked
+      WHERE r.id = ranked.id
+    `, [competition_id]);
+  };
 
-            // Получаем все оценки за это выступление
-            const scores = await db.query(
-                "SELECT * FROM scores WHERE performance_id = $1",
-                [performance_id]
-            );
+  addScore = async (req, res) => {
+    try {
+      const {
+        performance_id,
+        role_id,
+        gymnast_id,
+        competition_id,
+        apparatus,
+        score
+      } = req.body;
 
-            if (scores.rows.length === 0) {
-                return res.status(404).json({error: "No scores found for this performance"});
-            }
+      const user_id = req.user.id;
 
-            // Группируем оценки по бригадам
-            const scoresByBrigade = scores.rows.reduce((acc, score) => {
-                if (!acc[score.brigade]) {
-                    acc[score.brigade] = [];
-                }
-                acc[score.brigade].push(score.score);
-                return acc;
-            }, {});
+      const judgeRes = await db.query(
+        `SELECT id FROM judges WHERE user_id = $1`,
+        [user_id]
+      );
 
-            // Рассчитываем средние оценки по бригадам
-            const brigadeAverages = {};
-            for (const brigade in scoresByBrigade) {
-                const brigadeScores = scoresByBrigade[brigade];
-                brigadeScores.sort((a, b) => a - b);
+      if (judgeRes.rows.length === 0) {
+        return res.status(403).json({ error: 'Пользователь не является судьей' });
+      }
 
-                // Удаляем наивысшую и наинизшую оценки (если достаточно оценок)
-                if (brigadeScores.length > 2) {
-                    brigadeScores.pop(); // удаляем наивысшую
-                    brigadeScores.shift(); // удаляем наинизшую
-                }
+      const judge_id = judgeRes.rows[0].id;
 
-                // Рассчитываем среднее
-                const sum = brigadeScores.reduce((a, b) => a + b, 0);
-                brigadeAverages[brigade] = sum / brigadeScores.length;
-            }
+      await db.query(
+        `INSERT INTO scores (performance_id, judge_id, role_id, gymnast_id, competition_id, apparatus, score)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [performance_id, judge_id, role_id, gymnast_id, competition_id, apparatus, score]
+      );
 
-            // Рассчитываем итоговую оценку по правилам художественной гимнастики
-            let totalScore = 0;
-            let aScore = brigadeAverages['A'] || 0;
-            let eScore = brigadeAverages['E'] || 0;
-            let daScore = brigadeAverages['DA'] || 0;
-            let dbScore = brigadeAverages['DB'] || 0;
+      const allRolesRes = await db.query(
+        `SELECT id FROM judge_roles WHERE code SIMILAR TO '(A[1-4]|E[1-4]|DA[12]|DB[12])'`
+      );
+      const expected = allRolesRes.rows.map(r => r.id).sort().join(',');
 
-            // Формула расчета итоговой оценки может быть адаптирована под конкретные правила
-            totalScore = aScore + eScore + daScore + (dbScore || 0);
+      const actualRolesRes = await db.query(
+        `SELECT DISTINCT role_id FROM scores
+         WHERE gymnast_id = $1 AND competition_id = $2 AND apparatus = $3`,
+        [gymnast_id, competition_id, apparatus]
+      );
+      const actual = actualRolesRes.rows.map(r => r.role_id).sort().join(',');
 
-            // Получаем информацию о выступлении
-            const performance = await db.query(
-                "SELECT * FROM performances WHERE id = $1",
-                [performance_id]
-            );
+      if (expected === actual) {
+        await this.recalculateOneResult(gymnast_id, competition_id, apparatus);
+      }
 
-            if (performance.rows.length === 0) {
-                return res.status(404).json({error: "Performance not found"});
-            }
-
-            // Обновляем или создаем запись в результатах
-            const existingResult = await db.query(
-                "SELECT * FROM results WHERE gymnast_id = $1 AND competition_id = $2",
-                [performance.rows[0].gymnast_id, performance.rows[0].competition_id]
-            );
-
-            if (existingResult.rows.length > 0) {
-                // Обновляем существующий результат
-                const updatedResult = await db.query(
-                    `UPDATE results SET 
-                     total_score = $1, 
-                     a_score = $2, 
-                     e_score = $3, 
-                     da_score = $4, 
-                     db_score = $5 
-                     WHERE id = $6 RETURNING *`,
-                    [totalScore, aScore, eScore, daScore, dbScore, existingResult.rows[0].id]
-                );
-
-                res.json(updatedResult.rows[0]);
-            } else {
-                // Создаем новый результат
-                const newResult = await db.query(
-                    `INSERT INTO results 
-                     (gymnast_id, competition_id, total_score, a_score, e_score, da_score, db_score) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-                    [
-                        performance.rows[0].gymnast_id,
-                        performance.rows[0].competition_id,
-                        totalScore,
-                        aScore,
-                        eScore,
-                        daScore,
-                        dbScore
-                    ]
-                );
-
-                res.status(201).json(newResult.rows[0]);
-            }
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to calculate performance result"});
-        }
+      res.status(201).json({ message: 'Оценка добавлена' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Ошибка при добавлении оценки' });
     }
-
-    // Обновление рангов гимнасток после завершения соревнования
-    async updateRanks(req, res) {
-        try {
-            const {competition_id} = req.params;
-
-            // Получаем все результаты для этого соревнования
-            const results = await db.query(
-                "SELECT * FROM results WHERE competition_id = $1 ORDER BY total_score DESC",
-                [competition_id]
-            );
-
-            if (results.rows.length === 0) {
-                return res.status(404).json({error: "No results found for this competition"});
-            }
-
-            // Обновляем ранги
-            for (let i = 0; i < results.rows.length; i++) {
-                await db.query(
-                    "UPDATE results SET rank = $1 WHERE id = $2",
-                    [i + 1, results.rows[i].id]
-                );
-            }
-
-            res.json({message: "Ranks updated successfully"});
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to update ranks"});
-        }
-    }
-
-    // Получение результатов по потоку
-    async getStreamResults(req, res) {
-        try {
-            const {stream_id} = req.params;
-
-            const results = await db.query(
-                `SELECT r.*, g.name as gymnast_name, g.birth_year
-                 FROM results r
-                 JOIN gymnasts g ON r.gymnast_id = g.id
-                 JOIN performances p ON r.gymnast_id = p.gymnast_id AND r.competition_id = p.competition_id
-                 JOIN gymnast_streams gs ON g.id = gs.gymnast_id
-                 WHERE gs.stream_id = $1
-                 ORDER BY r.rank`,
-                [stream_id]
-            );
-
-            res.json(results.rows);
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to get stream results"});
-        }
-    }
-
-    // Получение детализированных результатов по гимнастке
-    async getGymnastDetailedResults(req, res) {
-        try {
-            const {gymnast_id, competition_id} = req.params;
-
-            // Основная информация о результате
-            const result = await db.query(
-                "SELECT * FROM results WHERE gymnast_id = $1 AND competition_id = $2",
-                [gymnast_id, competition_id]
-            );
-
-            if (result.rows.length === 0) {
-                return res.status(404).json({error: "Result not found"});
-            }
-
-            // Все выступления гимнастки в этом соревновании
-            const performances = await db.query(
-                "SELECT * FROM performances WHERE gymnast_id = $1 AND competition_id = $2",
-                [gymnast_id, competition_id]
-            );
-
-            // Все оценки за эти выступления
-            const scores = await db.query(
-                `SELECT s.*, j.name as judge_name, p.apparatus
-                 FROM scores s
-                 JOIN judges j ON s.judge_id = j.id
-                 JOIN performances p ON s.performance_id = p.id
-                 WHERE p.gymnast_id = $1 AND p.competition_id = $2`,
-                [gymnast_id, competition_id]
-            );
-
-            res.json({
-                ...result.rows[0],
-                performances: performances.rows,
-                scores: scores.rows
-            });
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to get detailed results"});
-        }
-    }
+  };
 }
 
 module.exports = new ScoringController();

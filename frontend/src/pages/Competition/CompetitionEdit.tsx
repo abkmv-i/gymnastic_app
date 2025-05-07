@@ -8,6 +8,10 @@ import CompetitionForm from '../../components/Competition/CompetitionForm';
 import GymnastsTable from '../../components/Gymnast/GymnastsTable';
 import AgeCategoriesManager from '../../components/AgeCategoriesManager/AgeCategoriesManager';
 import EditStreamsTable from '../../components/Streams/EditStreamsTable';
+import JudgesTable from '../../components/Judges/JudgesTable';
+import { Judge } from '../../models/types';
+import { useAuth } from '../../context/AuthContext';
+
 import '../../styles/common.css';
 import '../../App.css';
 
@@ -22,22 +26,28 @@ const CompetitionEdit: React.FC = () => {
     const [activeTab, setActiveTab] = useState('details');
     const [streams, setStreams] = useState<ExtendedStream[]>([]);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+    const [judges, setJudges] = useState<Judge[]>([]);
+    const { user } = useAuth();
+    const [isAdmin, setIsAdmin] = useState(false);
+    
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [compRes, gymnastsRes, categoriesRes, streamsRes] = await Promise.all([
+                const [compRes, gymnastsRes, categoriesRes, streamsRes, judgesRes] = await Promise.all([
                     axios.get<Competition>(`http://localhost:8080/competitions/${id}`),
                     axios.get<Gymnast[]>(`http://localhost:8080/competitions/${id}/gymnasts`),
                     axios.get<AgeCategory[]>(`http://localhost:8080/competitions/${id}/age-categories`),
                     axios.get<Stream[]>(`http://localhost:8080/competitions/${id}/streams-with-gymnasts`),
+                    axios.get<Judge[]>(`http://localhost:8080/judges/competition/${id}`)
                 ]);
 
                 setCompetition(compRes.data);
                 setGymnasts(gymnastsRes.data);
                 setAgeCategories(categoriesRes.data);
                 setStreams(streamsRes.data);
+                setJudges(judgesRes.data);
+
             } catch (err) {
                 setError('Не удалось загрузить данные соревнования');
             } finally {
@@ -46,13 +56,36 @@ const CompetitionEdit: React.FC = () => {
         };
 
         fetchData();
+        fetchIsAdmin();
+
     }, [id]);
+
+    const fetchIsAdmin = async () => {
+        try {
+          const res = await axios.get<boolean>(`http://localhost:8080/competitions/${id}/is-admin`);
+          setIsAdmin(res.data);
+        } catch {
+          console.error("Не удалось проверить права администратора");
+        }
+      };
+
+
     const fetchStreams = () => {
         axios.get<ExtendedStream[]>(`http://localhost:8080/competitions/${id}/streams-with-gymnasts`)
             .then(res => setStreams(res.data))
             .catch(err => console.error(err));
     };
 
+    const fetchJudges = async () => {
+        try {
+          const res = await axios.get<Judge[]>(`http://localhost:8080/judges/competition/${id}`);
+          setJudges(res.data);
+        } catch {
+          console.error("Не удалось загрузить судей");
+        }
+      };
+      
+      
     const handleSubmit = async (competitionData: Omit<Competition, 'id' | 'created_at'>) => {
         try {
             await axios.put(`http://localhost:8080/competitions/${id}`, competitionData);
@@ -71,6 +104,8 @@ const CompetitionEdit: React.FC = () => {
     };
     if (loading) return <LoadingSpinner/>;
     if (!competition) return <div>Соревнование не найдено</div>;
+    if (!isAdmin) return <div className="error-message">У вас нет прав для редактирования этого соревнования</div>;
+
 
     return (
         <div className="container">
@@ -106,6 +141,7 @@ const CompetitionEdit: React.FC = () => {
                     {id: 'gymnasts', label: 'Гимнастки'},
                     {id: 'categories', label: 'Возрастные категории'},
                     {id: 'streams', label: 'Расписание'},
+                    { id: 'judges', label: 'Судьи' }, 
                 ]}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
@@ -155,6 +191,14 @@ const CompetitionEdit: React.FC = () => {
                         onRefresh={fetchStreams}
                     />
                 )}
+                {activeTab === 'judges' && (
+                    <JudgesTable
+                        judges={judges}
+                        competitionId={competition.id}
+                        onUpdate={fetchJudges}
+                    />
+                    )}
+
 
             </div>
             {showDeleteModal && (

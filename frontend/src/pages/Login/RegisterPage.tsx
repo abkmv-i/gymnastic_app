@@ -6,7 +6,7 @@ import './RegisterPage.css';
 const RegisterPage: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState<'judge' | 'organizer'>('judge');
+    // const [role, setRole] = useState<'judge' | 'organizer'>('judge');
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const {register} = useAuth();
@@ -16,7 +16,7 @@ const RegisterPage: React.FC = () => {
         setError('');
 
         try {
-            await register({username, password, role});
+            await register({username, password});
             navigate('/');
         } catch (err) {
             setError('Registration failed. Username may already be taken.');
@@ -46,16 +46,7 @@ const RegisterPage: React.FC = () => {
                         required
                     />
                 </div>
-                <div className="form-group">
-                    <label>Role:</label>
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as 'judge' | 'organizer')}
-                    >
-                        <option value="judge">Judge</option>
-                        <option value="organizer">Organizer</option>
-                    </select>
-                </div>
+                
                 <button type="submit">Register</button>
             </form>
             <p>

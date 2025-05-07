@@ -1,26 +1,18 @@
-// authMiddleware.js - простой пример middleware для аутентификации
-module.exports = (req, res, next) => {
-    try {
-        // Здесь должна быть ваша логика проверки аутентификации
-        // Например, проверка JWT токена или сессии
+const jwt = require("jsonwebtoken");
 
-        // Временная заглушка - пропускаем все запросы
-        console.log("Auth middleware - request allowed");
-        next();
-        if (req.method === 'OPTIONS') {
-            return next(); // разрешить preflight
-          }
-        // Реальный пример проверки токена:
-        /*
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({message: "Не авторизован"});
-        }
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
-        req.user = decoded;
-        next();
-        */
-    } catch (e) {
-        res.status(401).json({message: "Не авторизован"});
-    }
-}
+module.exports = function (req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "No token provided" });
+
+    const token = authHeader.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Token missing" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_super_secret_key");
+
+    req.user = decoded; 
+    next();
+  } catch (e) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+};

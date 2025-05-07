@@ -5,6 +5,8 @@ const authRouter = require('./routers/authRouter');
 const dataRouter = require('./routers/dataRouter');
 const competitionRouter = require('./routers/competitionRouter');
 const gymnastRouter = require('./routers/gymnastRouter');
+const judgeRouter = require('./routers/judgeRouter');
+const scoringRoutes = require('./routers/scoringRoutes');
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -25,5 +27,7 @@ app.use("/auth", authRouter);
 app.use("/", dataRouter);
 app.use("/competitions", competitionRouter);
 app.use("/gymnasts", gymnastRouter);
+app.use('/judges', judgeRouter);
+app.use('/scores', scoringRoutes);
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

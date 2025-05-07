@@ -24,11 +24,7 @@ router.get("/:competition_id/results", competitionController.getCompetitionResul
 router.get("/:competition_id/streams-with-gymnasts", competitionController.getStreamsWithGymnastsAndApparatuses);
 router.get("/:competition_id/results-with-details", competitionController.getCompetitionResultsWithDetails);
 
-// Судейские бригады
-router.post("/:competition_id/panels", authMiddleware, competitionController.createJudgingPanel);
-router.post("/panels/assign-judge", authMiddleware, competitionController.assignJudgeToPanel);
-
 
 router.get("/:competition_id/performances", competitionController.getCompetitionPerformances);
-
+router.get("/:competition_id/is-admin", authMiddleware, competitionController.isAdmin);
 module.exports = router;

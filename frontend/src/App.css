@@ -17,21 +17,6 @@ h1, h2, h3 {
     margin-bottom: 20px;
 }
 
-/* button {
-  background-color: #E9967A;
-  color: #ffffff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #d97760;
-} */
-
 table {
     width: 100%;
     border-collapse: collapse;
@@ -310,10 +295,13 @@ table th {
 
 /* App.css */
 .main-nav {
-    background-color: #2c3e50;
+    background-color: #45a348; /* светло-коралловый, в стиле остальных элементов */
+    opacity: 0.9;
+    /* background-color: #4CAF50; светло-коралловый, в стиле остальных элементов */
     color: white;
     padding: 1rem 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .nav-container {
@@ -326,10 +314,11 @@ table th {
 }
 
 .nav-logo {
-    color: white;
+    font-size: 1.8rem;
     font-weight: bold;
-    font-size: 1.5rem;
+    color: white;
     text-decoration: none;
+    font-family: inherit;
 }
 
 .nav-links {
@@ -339,12 +328,15 @@ table th {
 
 .nav-link {
     color: white;
+    font-size: 1rem;
     text-decoration: none;
+    font-family: inherit;
     transition: color 0.2s;
 }
 
 .nav-link:hover {
-    color: #ecf0f1;
+    color: #fdfdfd;
+    text-decoration: underline;
 }
 
 .nav-auth {
@@ -353,23 +345,20 @@ table th {
     gap: 1rem;
 }
 
-.nav-user {
-    color: #ecf0f1;
-    font-size: 0.9rem;
-}
-
 .nav-logout {
     background: none;
-    border: none;
+    border: 1px solid white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
     color: white;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    transition: background-color 0.3s;
+    font-family: inherit;
 }
 
 .nav-logout:hover {
-    background-color: #e74c3c;
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .content-container {

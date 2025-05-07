@@ -2,17 +2,17 @@ const db = require("../db");
 
 class DataController {
 
-    async judgePerformance(req, res) {
-        try {
-            const {gymnast_id, judge_id, apparatus, A_score, E_score, DA_score} = req.body;
+    // async judgePerformance(req, res) {
+    //     try {
+    //         const {gymnast_id, judge_id, apparatus, A_score, E_score, DA_score} = req.body;
 
-            // Логика оценки выступления
-            res.json({message: "Score recorded successfully"});
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to record score"});
-        }
-    }
+    //         // Логика оценки выступления
+    //         res.json({message: "Score recorded successfully"});
+    //     } catch (err) {
+    //         console.error(err);
+    //         res.status(500).json({error: "Failed to record score"});
+    //     }
+    // }
 
     
     async getAllCompetitions(req, res) {
@@ -53,15 +53,12 @@ class DataController {
             );
 
             // Получаем судей (используем альтернативный подход)
-            const judges = await db.query(
-                `SELECT DISTINCT j.id, j.name, pj.position AS category
-             FROM judges j
-             JOIN panel_judges pj ON j.id = pj.judge_id
-             JOIN judging_panels jp ON pj.panel_id = jp.id
-             WHERE jp.competition_id = $1`,
-                [id]
-            );
-
+            const judges = await db.query(`
+                SELECT j.id, j.name, cj.role
+                FROM judges j
+                JOIN competition_judges cj ON j.id = cj.judge_id
+                WHERE cj.competition_id = $1
+              `, [id]);              
             res.json({
                 ...competition.rows[0],
                 gymnasts: gymnasts.rows,

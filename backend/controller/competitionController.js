@@ -4,21 +4,31 @@ class CompetitionController {
     // Создание нового соревнования
     async createCompetition(req, res) {
         try {
-            const {name, date, location, status = "planned"} = req.body;
-
+            const { name, date, location, status = "planned" } = req.body;
+            const userId = req.user.id;
+    
+            // 1. Создаём соревнование
             const newCompetition = await db.query(
                 `INSERT INTO competitions (name, date, location, status) 
                  VALUES ($1, $2, $3, $4) RETURNING *`,
                 [name, date, location, status]
             );
-
+    
+            const competitionId = newCompetition.rows[0].id;
+    
+            // 2. Добавляем создателя в competition_admins
+            await db.query(
+                `INSERT INTO competition_admins (competition_id, user_id) VALUES ($1, $2)`,
+                [competitionId, userId]
+            );
+    
             res.status(201).json(newCompetition.rows[0]);
         } catch (err) {
             console.error(err);
-            res.status(500).json({error: "Failed to create competition"});
+            res.status(500).json({ error: "Failed to create competition" });
         }
     }
-
+    
     // Добавление дня соревнования
     async addCompetitionDay(req, res) {
         try {
@@ -76,79 +86,6 @@ class CompetitionController {
         }
     }
 
-    // Назначение гимнасток в потоки
-    // async assignGymnastToStream(req, res) {
-    //     try {
-    //         const { gymnast_id, stream_id } = req.body;
-
-    //         // Проверяем, не назначена ли уже гимнастка в этот поток
-    //         const existingAssignment = await db.query(
-    //             "SELECT * FROM gymnast_streams WHERE gymnast_id = $1 AND stream_id = $2",
-    //             [gymnast_id, stream_id]
-    //         );
-
-    //         if (existingAssignment.rows.length > 0) {
-    //             return res.status(400).json({ error: "Gymnast already assigned to this stream" });
-    //         }
-
-    //         const assignment = await db.query(
-    //             "INSERT INTO gymnast_streams (gymnast_id, stream_id) VALUES ($1, $2) RETURNING *",
-    //             [gymnast_id, stream_id]
-    //         );
-
-    //         res.status(201).json(assignment.rows[0]);
-    //     } catch (err) {
-    //         console.error(err);
-    //         res.status(500).json({ error: "Failed to assign gymnast to stream" });
-    //     }
-    // }
-
-    // Создание судейских бригад
-    async createJudgingPanel(req, res) {
-        try {
-            const {competition_id, apparatus, panel_type} = req.body;
-
-            const newPanel = await db.query(
-                `INSERT INTO judging_panels 
-                 (competition_id, apparatus, panel_type) 
-                 VALUES ($1, $2, $3) RETURNING *`,
-                [competition_id, apparatus, panel_type]
-            );
-
-            res.status(201).json(newPanel.rows[0]);
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to create judging panel"});
-        }
-    }
-
-    // Назначение судей в бригады
-    async assignJudgeToPanel(req, res) {
-        try {
-            const {panel_id, judge_id, position} = req.body;
-
-            // Проверяем, не назначен ли уже судья в эту бригаду
-            const existingAssignment = await db.query(
-                "SELECT * FROM panel_judges WHERE panel_id = $1 AND judge_id = $2",
-                [panel_id, judge_id]
-            );
-
-            if (existingAssignment.rows.length > 0) {
-                return res.status(400).json({error: "Judge already assigned to this panel"});
-            }
-
-            const assignment = await db.query(
-                `INSERT INTO panel_judges (panel_id, judge_id, position) 
-                 VALUES ($1, $2, $3) RETURNING *`,
-                [panel_id, judge_id, position]
-            );
-
-            res.status(201).json(assignment.rows[0]);
-        } catch (err) {
-            console.error(err);
-            res.status(500).json({error: "Failed to assign judge to panel"});
-        }
-    }
 
     // Получение полной информации о соревновании
     async getFullCompetitionInfo(req, res) {
@@ -245,13 +182,11 @@ class CompetitionController {
             const {competition_id} = req.params;
 
             const judges = await db.query(`
-            SELECT j.* FROM judges j
-            JOIN panel_judges pj ON j.id = pj.judge_id
-            JOIN judging_panels jp ON pj.panel_id = jp.id
-            WHERE jp.competition_id = $1
-            GROUP BY j.id
-          `, [competition_id]);
-
+                SELECT j.id, j.name, cj.role
+                FROM competition_judges cj
+                JOIN judges j ON cj.judge_id = j.id
+                WHERE cj.competition_id = $1
+              `, [competition_id]);
             res.json(judges.rows);
         } catch (err) {
             console.error(err);
@@ -395,82 +330,57 @@ class CompetitionController {
 
     async getCompetitionResultsWithDetails(req, res) {
         try {
-            const {competition_id} = req.params;
-
-            // Сначала получаем все возрастные категории
-            const ageCategories = await db.query(`
-        SELECT * FROM age_categories
-        ORDER BY min_birth_year
-      `);
-
-            // Получаем всех гимнасток с их возрастными категориями
-            const gymnasts = await db.query(`
-        SELECT g.id, g.name, g.age_category_id
-        FROM gymnasts g
-        JOIN results r ON g.id = r.gymnast_id
-        WHERE r.competition_id = $1
-        GROUP BY g.id
-      `, [competition_id]);
-
-            // Для каждой возрастной категории получаем результаты
-            const resultsByCategory = await Promise.all(
-                ageCategories.rows.map(async (category) => {
-                    // Получаем результаты с ранжированием внутри категории
-                    const categoryResults = await db.query(`
+          const { competition_id } = req.params;
+      
+          // Получаем все результаты с данными гимнастки и её категории
+          const resultsRes = await db.query(`
             SELECT 
-              r.*,
-              g.name as gymnast_name,
-              RANK() OVER (ORDER BY r.total_score DESC) as category_rank
+              r.*, 
+              g.name AS gymnast_name,
+              g.age_category_id,
+              ac.name AS age_category_name
             FROM results r
             JOIN gymnasts g ON r.gymnast_id = g.id
-            WHERE r.competition_id = $1 AND g.age_category_id = $2
-            ORDER BY category_rank
-          `, [competition_id, category.id]);
-
-                    // Для каждого результата получаем данные по предметам
-                    for (let result of categoryResults.rows) {
-                        const apparatusResults = await db.query(`
-              SELECT 
-                p.apparatus,
-                COALESCE(SUM(CASE WHEN pj.position = 'A' THEN s.score ELSE 0 END)::numeric, 0) as a_score,
-                COALESCE(SUM(CASE WHEN pj.position = 'E' THEN s.score ELSE 0 END)::numeric, 0) as e_score,
-                COALESCE(SUM(CASE WHEN pj.position = 'DA' THEN s.score ELSE 0 END)::numeric, 0) as da_score,
-                COALESCE(SUM(CASE WHEN pj.position = 'DB' THEN s.score ELSE 0 END)::numeric, 0) as db_score,
-                COALESCE(SUM(s.score)::numeric, 0) as total
-              FROM performances p
-              LEFT JOIN scores s ON p.id = s.performance_id
-              LEFT JOIN panel_judges pj ON s.judge_id = pj.judge_id
-              WHERE p.gymnast_id = $1 AND p.competition_id = $2
-              GROUP BY p.apparatus
-              ORDER BY p.apparatus
-            `, [result.gymnast_id, competition_id]);
-
-                        result.apparatusResults = apparatusResults.rows;
-                    }
-
-                    return {
-                        category,
-                        results: categoryResults.rows
-                    };
-                })
-            );
-
-            // Формируем плоский список результатов для обратной совместимости
-            const allResults = resultsByCategory.flatMap(category =>
-                category.results.map(result => ({
-                    ...result,
-                    age_category_id: category.category.id,
-                    age_category_name: category.category.name,
-                    rank: result.category_rank // Используем ранг в категории как основной
-                }))
-            );
-
-            res.json(allResults);
+            LEFT JOIN age_categories ac ON g.age_category_id = ac.id
+            WHERE r.competition_id = $1
+          `, [competition_id]);
+      
+          const groupedByGymnast = {};
+          for (const row of resultsRes.rows) {
+            const key = row.gymnast_id;
+            if (!groupedByGymnast[key]) {
+              groupedByGymnast[key] = {
+                gymnast_id: row.gymnast_id,
+                gymnast_name: row.gymnast_name,
+                age_category_id: row.age_category_id,
+                age_category_name: row.age_category_name,
+                apparatusResults: []
+              };
+            }
+      
+            groupedByGymnast[key].apparatusResults.push({
+              apparatus: row.apparatus,
+              a_score: parseFloat(row.a_score),
+              e_score: parseFloat(row.e_score),
+              da_score: parseFloat(row.da_score),
+              db_score: parseFloat(row.db_score),
+              total: parseFloat(row.total_score),
+              rank: row.rank
+            });
+          }
+      
+          const allResults = Object.values(groupedByGymnast).map(g => ({
+            ...g,
+            total_score: g.apparatusResults.reduce((sum, a) => sum + (a.total || 0), 0)
+          }));
+      
+          res.json(allResults);
         } catch (err) {
-            console.error(err);
-            res.status(500).json({message: 'Server error'});
+          console.error(err);
+          res.status(500).json({ message: 'Server error' });
         }
-    };
+      }
+      
 
     async updateCompetition(req, res) {
         try {
@@ -748,8 +658,29 @@ class CompetitionController {
           res.status(500).json({ error: "Ошибка при получении выступлений" });
         }
       }
-      
 
+      async isAdmin(req, res) {
+        const userId = req.user.id;
+        const competitionId = parseInt(req.params.competition_id);
+    
+        if (isNaN(competitionId)) {
+            return res.status(400).json({ error: "Некорректный ID соревнования" });
+        }
+    
+        try {
+            const result = await db.query(
+                `SELECT 1 FROM competition_admins 
+                 WHERE competition_id = $1 AND user_id = $2`,
+                [competitionId, userId]
+            );
+    
+            res.json(result.rows.length > 0);
+        } catch (err) {
+            console.error("Ошибка при проверке прав администратора:", err);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    }
+    
 }
 
 module.exports = new CompetitionController();

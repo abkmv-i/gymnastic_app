@@ -23,17 +23,15 @@ const Navigation: React.FC = () => {
             <div className="nav-container">
                 <Link to="/" className="nav-logo">Гимнастика</Link>
 
-                <div className="nav-links">
-                    {user && (
-                        <>
+                {/* <div className="nav-links"> */}
+                    {/* {user && (
+                        <> */}
                             <Link to="/" className="nav-link">Главная</Link>
 
-                            {user.role === 'admin' && (
-                                <Link to="/competitions/new" className="nav-link">Создать соревнование</Link>
-                            )}
-                        </>
-                    )}
-                </div>
+                           
+                        {/* </>
+                    )} */}
+                {/* </div> */}
 
                 <div className="nav-auth">
                     {user ? (

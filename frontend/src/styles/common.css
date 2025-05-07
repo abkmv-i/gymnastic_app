@@ -297,6 +297,14 @@ select:hover {
 
 .form-field input,
 .form-field select {
+    width: 90%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+/* .form-field input, */
+.form-field select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ddd;
@@ -403,4 +411,24 @@ select:hover {
     background-color: #f44336;
     color: white;
 }
+  
+@media (max-width: 768px) {
+    .form-vertical {
+      padding: 16px;
+    }
+  
+    .form-field {
+      width: 100%;
+    }
+  
+    .form-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+  
+    .form-actions .btn {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+  }
   
