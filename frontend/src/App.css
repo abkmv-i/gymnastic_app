@@ -295,11 +295,11 @@ table th {
 
 /* App.css */
 .main-nav {
-    background-color: #45a348; /* светло-коралловый, в стиле остальных элементов */
+    background-color: #2F4F4F; 
+        /* background-color: #45a348;  */
     opacity: 0.9;
-    /* background-color: #4CAF50; светло-коралловый, в стиле остальных элементов */
     color: white;
-    padding: 1rem 0;
+    padding: 4px 0;
     font-family: Arial, sans-serif;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -313,13 +313,7 @@ table th {
     padding: 0 1rem;
 }
 
-.nav-logo {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: white;
-    text-decoration: none;
-    font-family: inherit;
-}
+
 
 .nav-links {
     display: flex;
@@ -328,7 +322,7 @@ table th {
 
 .nav-link {
     color: white;
-    font-size: 1rem;
+    font-size: 20px;
     text-decoration: none;
     font-family: inherit;
     transition: color 0.2s;
@@ -336,7 +330,7 @@ table th {
 
 .nav-link:hover {
     color: #fdfdfd;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 .nav-auth {
@@ -419,7 +413,7 @@ table th {
 
 .category-controls button {
     padding: 8px 16px;
-    background: #4CAF50;
+    background: #4d7777;
     color: white;
     border: none;
     border-radius: 4px;

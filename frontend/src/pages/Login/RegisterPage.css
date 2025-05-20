@@ -35,7 +35,6 @@
 .register-page button[type="submit"] {
     width: 100%;
     padding: 10px;
-    background-color: #3498db;
     color: white;
     border: none;
     border-radius: 4px;
@@ -44,9 +43,7 @@
     margin-top: 10px;
 }
 
-.register-page button[type="submit"]:hover {
-    background-color: #2980b9;
-}
+
 
 .register-page .error {
     color: #e74c3c;
@@ -57,7 +54,7 @@
 .register-page .link-button {
     background: none;
     border: none;
-    color: #3498db;
+    color: #4d7777;
     cursor: pointer;
     padding: 0;
     text-decoration: underline;

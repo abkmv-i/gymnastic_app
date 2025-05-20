@@ -100,7 +100,7 @@ const JudgingForm: React.FC<JudgingFormProps> = ({
       </div>
 
       <div className="form-field">
-        <label htmlFor="score">Оценка (0–10):</label>
+        <label htmlFor="score">Оценка:</label>
         <input
           id="score"
           type="number"

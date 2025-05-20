@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
     return (
         <div className="container">
             <div className="competition-header">
-                <h1>Cоревнования</h1>
+                <h1>Список соревнований</h1>
             </div>
             <button
                 onClick={handleCreateCompetition}

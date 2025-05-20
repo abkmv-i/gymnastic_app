@@ -22,7 +22,7 @@
 
 .btn-search {
     padding: 8px 16px;
-    background-color: #4CAF50;
+    background-color: #4d7777;
     color: white;
     border: none;
     border-radius: 4px;
@@ -30,7 +30,7 @@
 }
 
 .btn-search:hover {
-    background-color: #45a049;
+    background-color: #4d7777;
 }
 
 .highlighted {

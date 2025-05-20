@@ -108,7 +108,6 @@ const EditStreamsTable: React.FC<{
     return (
         <div className="streams-container">
             <div className="streams-search">
-                <div className="search-and-toggle">
                     <input
                         type="text"
                         placeholder="Поиск по имени гимнастки или городу"
@@ -119,8 +118,8 @@ const EditStreamsTable: React.FC<{
                     <button onClick={toggleAllStreams} className="toggle-all-button">
                         {expandedStreams.length === streams.length ? 'Свернуть все' : 'Раскрыть все'}
                     </button>
-                </div>
-
+            </div>
+            <div className="streams-search">
                 <div className="time-and-autoassign">
                     <div className="time-inputs">
                         <input
@@ -135,11 +134,10 @@ const EditStreamsTable: React.FC<{
                             onChange={(e) => setDayEndTime(e.target.value)}
                             className="form-input"
                         />
+                        <button onClick={handleAutoDistribute} className="btn add">
+                            Авто-распределение
+                        </button>
                     </div>
-
-                    <button onClick={handleAutoDistribute} className="btn add">
-                        Авто-распределение
-                    </button>
                 </div>
             </div>
 

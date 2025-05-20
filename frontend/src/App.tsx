@@ -13,6 +13,7 @@ import CompetitionEdit from './pages/Competition/CompetitionEdit';
 import NotFoundPage from './pages/Common/NotFoundPage';
 import {useAuth} from './context/AuthContext';
 import './App.css';
+import { ReactComponent as Logo } from './images/logo.svg'; 
 
 
 const Navigation: React.FC = () => {
@@ -21,17 +22,30 @@ const Navigation: React.FC = () => {
     return (
         <nav className="main-nav">
             <div className="nav-container">
-                <Link to="/" className="nav-logo">Гимнастика</Link>
+                {user ? (
+                        <>
+                            <Link to="/" className="nav-logo">
+                                <Logo style={{ height: 50, width: 100 }} />
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                           <Link to="/" className="nav-logo">
+                                <Logo style={{ height: 50, width: 1200 }} />
+                            </Link>
+                        </>
+                    )}
+                
 
-                {/* <div className="nav-links"> */}
-                    {/* {user && (
-                        <> */}
-                            <Link to="/" className="nav-link">Главная</Link>
+                <div className="nav-links">
+                     {user && (
+                        <> 
+                            <Link to="/" className="nav-link">Соревнования</Link>
 
                            
-                        {/* </>
-                    )} */}
-                {/* </div> */}
+                         </>
+                    )} 
+                </div>
 
                 <div className="nav-auth">
                     {user ? (
@@ -40,8 +54,8 @@ const Navigation: React.FC = () => {
                         </>
                     ) : (
                         <>
-                            <Link to="/login" className="nav-link">Вход</Link>
-                            <Link to="/register" className="nav-link">Регистрация</Link>
+                            {/* <Link to="/login" className="nav-link">Вход</Link>
+                            <Link to="/register" className="nav-link">Регистрация</Link> */}
                         </>
                     )}
                 </div>

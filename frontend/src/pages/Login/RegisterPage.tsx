@@ -25,11 +25,11 @@ const RegisterPage: React.FC = () => {
 
     return (
         <div className="register-page">
-            <h1>Register</h1>
+            <h1>Регистрация</h1>
             {error && <div className="error">{error}</div>}
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label>Username:</label>
+                    <label>Логин:</label>
                     <input
                         type="text"
                         value={username}
@@ -38,7 +38,7 @@ const RegisterPage: React.FC = () => {
                     />
                 </div>
                 <div className="form-group">
-                    <label>Password:</label>
+                    <label>Пароль:</label>
                     <input
                         type="password"
                         value={password}
@@ -47,12 +47,12 @@ const RegisterPage: React.FC = () => {
                     />
                 </div>
                 
-                <button type="submit">Register</button>
+                <button className='btn add' type="submit">Зарегестрироваться</button>
             </form>
             <p>
-                Already have an account?{' '}
+                Есть аккаунт?{' '}
                 <button onClick={() => navigate('/login')} className="link-button">
-                    Login
+                    Войти
                 </button>
             </p>
         </div>

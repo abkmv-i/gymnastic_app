@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../../context/AuthContext';
 import './LoginPage.css';
+import '../../styles/common.css'; 
 
 const LoginPage: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -24,11 +25,11 @@ const LoginPage: React.FC = () => {
 
     return (
         <div className="login-page">
-            <h1>Login</h1>
+            <h1>Авторизация</h1>
             {error && <div className="error">{error}</div>}
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label>Username:</label>
+                    <label>Логин:</label>
                     <input
                         type="text"
                         value={username}
@@ -37,7 +38,7 @@ const LoginPage: React.FC = () => {
                     />
                 </div>
                 <div className="form-group">
-                    <label>Password:</label>
+                    <label>Пароль:</label>
                     <input
                         type="password"
                         value={password}
@@ -45,12 +46,12 @@ const LoginPage: React.FC = () => {
                         required
                     />
                 </div>
-                <button type="submit">Login</button>
+                <button className="btn add" type="submit">Войти</button>
             </form>
             <p>
-                Don't have an account?{' '}
+                Нет аккаунта?{' '}
                 <button onClick={() => navigate('/register')} className="link-button">
-                    Register
+                    Зарегестрироваться
                 </button>
             </p>
         </div>
